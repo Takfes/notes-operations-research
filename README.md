@@ -11,6 +11,7 @@
 
 <br>
 
+- [Google OR-Tools](https://developers.google.com/optimization/introduction) Tutorials
 - [Supply Chain Articles](https://s-saci95.medium.com/) by Samir Saci
 - [Supply Chain Network Design](http://networkdesignbook.com/academic-use/course-materials/) Blog with Examples
 - [Gurobi GitHub Repo](https://github.com/Gurobi/modeling-examples) Repo with Examples
@@ -21,3 +22,11 @@
 - [Book](https://drive.google.com/drive/folders/12DwbohMBZKfEibXGG5Q28Cn1iN1UKZjD) Operations Research Problems - Statements and Solutions
 - [Book](https://drive.google.com/drive/folders/12DwbohMBZKfEibXGG5Q28Cn1iN1UKZjD) Operations Research Calculations Handbook
 - [Simplex in Greek](https://docplayer.gr/42208492-Epiheirisiaki-ereyna.html)
+
+<br>
+
+- [Download CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio)
+- `python /Applications/CPLEX_Studio_Community2211/python/setup.py install`
+- `pyomo help --solvers`
+- [pyomo documentation](https://pyomo.readthedocs.io/en/stable/)
+- [pyomo handbook](https://www.osti.gov/servlets/purl/1376827)
