@@ -1,0 +1,57 @@
+{
+    "Problem": [
+        {
+            "Lower bound": 14666.6666666667,
+            "Name": "unknown",
+            "Number of constraints": 6,
+            "Number of nonzeros": 12,
+            "Number of objectives": 1,
+            "Number of variables": 4,
+            "Sense": "minimize",
+            "Upper bound": 14666.6666666667
+        }
+    ],
+    "Solution": [
+        {
+            "number of solutions": 1,
+            "number of solutions displayed": 1
+        },
+        {
+            "Constraint": "No values",
+            "Gap": 0.0,
+            "Message": null,
+            "Objective": {
+                "obj": {
+                    "Value": 14666.666666666662
+                }
+            },
+            "Problem": {},
+            "Status": "feasible",
+            "Variable": {
+                "shares[Ferrofial]": {
+                    "Value": 833.333333333333
+                },
+                "shares[Gamefa]": {
+                    "Value": 2500.0
+                },
+                "shares[Telefonita]": {
+                    "Value": 333.333333333333
+                }
+            }
+        }
+    ],
+    "Solver": [
+        {
+            "Error rc": 0,
+            "Statistics": {
+                "Branch and bound": {
+                    "Number of bounded subproblems": 0,
+                    "Number of created subproblems": 0
+                }
+            },
+            "Status": "ok",
+            "Termination condition": "optimal",
+            "Time": 0.012971162796020508
+        }
+    ]
+}

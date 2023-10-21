@@ -1,0 +1,288 @@
+{
+  "Problem": [
+    {
+      "Lower bound": 96265.1785714286,
+      "Name": "unknown",
+      "Number of constraints": 79,
+      "Number of nonzeros": 288,
+      "Number of objectives": 1,
+      "Number of variables": 126,
+      "Sense": "maximize",
+      "Upper bound": 96265.1785714286
+    }
+  ],
+  "Solution": [
+    {
+      "number of solutions": 1,
+      "number of solutions displayed": 1
+    },
+    {
+      "Constraint": "No values",
+      "Gap": 0.0,
+      "Message": null,
+      "Objective": {
+        "obj": {
+          "Value": 96265.17857142857
+        }
+      },
+      "Problem": {},
+      "Status": "feasible",
+      "Variable": {
+        "make[1,1]": {
+          "Value": 500.0
+        },
+        "make[1,2]": {
+          "Value": 700.0
+        },
+        "make[1,4]": {
+          "Value": 200.0
+        },
+        "make[1,5]": {
+          "Value": 7.1345864600398e-14
+        },
+        "make[1,6]": {
+          "Value": 550.0
+        },
+        "make[2,1]": {
+          "Value": 888.571428571428
+        },
+        "make[2,2]": {
+          "Value": 600.0
+        },
+        "make[2,4]": {
+          "Value": 300.0
+        },
+        "make[2,5]": {
+          "Value": 99.9999999999999
+        },
+        "make[2,6]": {
+          "Value": 550.0
+        },
+        "make[3,1]": {
+          "Value": 382.5
+        },
+        "make[3,2]": {
+          "Value": 117.5
+        },
+        "make[3,4]": {
+          "Value": 400.0
+        },
+        "make[3,5]": {
+          "Value": 600.0
+        },
+        "make[4,1]": {
+          "Value": 300.0
+        },
+        "make[4,4]": {
+          "Value": 500.0
+        },
+        "make[4,5]": {
+          "Value": 100.0
+        },
+        "make[4,6]": {
+          "Value": 350.0
+        },
+        "make[5,1]": {
+          "Value": 800.0
+        },
+        "make[5,2]": {
+          "Value": 500.0
+        },
+        "make[5,4]": {
+          "Value": 200.0
+        },
+        "make[5,5]": {
+          "Value": 1100.0
+        },
+        "make[6,1]": {
+          "Value": 200.0
+        },
+        "make[6,2]": {
+          "Value": 300.0
+        },
+        "make[6,3]": {
+          "Value": 400.0
+        },
+        "make[6,5]": {
+          "Value": 300.0
+        },
+        "make[6,6]": {
+          "Value": 550.0
+        },
+        "make[7,2]": {
+          "Value": 250.0
+        },
+        "make[7,4]": {
+          "Value": 100.0
+        },
+        "make[7,5]": {
+          "Value": 100.0
+        },
+        "sell[1,1]": {
+          "Value": 500.0
+        },
+        "sell[1,2]": {
+          "Value": 600.0
+        },
+        "sell[1,3]": {
+          "Value": 100.0
+        },
+        "sell[1,4]": {
+          "Value": 200.0
+        },
+        "sell[1,6]": {
+          "Value": 500.0
+        },
+        "sell[2,1]": {
+          "Value": 888.571428571428
+        },
+        "sell[2,2]": {
+          "Value": 500.0
+        },
+        "sell[2,3]": {
+          "Value": 100.0
+        },
+        "sell[2,4]": {
+          "Value": 300.0
+        },
+        "sell[2,5]": {
+          "Value": 100.0
+        },
+        "sell[2,6]": {
+          "Value": 500.0
+        },
+        "sell[3,1]": {
+          "Value": 300.0
+        },
+        "sell[3,2]": {
+          "Value": 200.0
+        },
+        "sell[3,4]": {
+          "Value": 400.0
+        },
+        "sell[3,5]": {
+          "Value": 500.0
+        },
+        "sell[3,6]": {
+          "Value": 50.0
+        },
+        "sell[4,1]": {
+          "Value": 300.0
+        },
+        "sell[4,4]": {
+          "Value": 500.0
+        },
+        "sell[4,5]": {
+          "Value": 100.0
+        },
+        "sell[4,6]": {
+          "Value": 300.0
+        },
+        "sell[5,1]": {
+          "Value": 800.0
+        },
+        "sell[5,2]": {
+          "Value": 400.0
+        },
+        "sell[5,3]": {
+          "Value": 100.0
+        },
+        "sell[5,4]": {
+          "Value": 200.0
+        },
+        "sell[5,5]": {
+          "Value": 1000.0
+        },
+        "sell[5,6]": {
+          "Value": 50.0
+        },
+        "sell[6,1]": {
+          "Value": 200.0
+        },
+        "sell[6,2]": {
+          "Value": 300.0
+        },
+        "sell[6,3]": {
+          "Value": 400.0
+        },
+        "sell[6,5]": {
+          "Value": 300.0
+        },
+        "sell[6,6]": {
+          "Value": 500.0
+        },
+        "sell[7,2]": {
+          "Value": 150.0
+        },
+        "sell[7,3]": {
+          "Value": 100.0
+        },
+        "sell[7,4]": {
+          "Value": 100.0
+        },
+        "sell[7,6]": {
+          "Value": 50.0000000000001
+        },
+        "store[1,2]": {
+          "Value": 100.0
+        },
+        "store[1,6]": {
+          "Value": 50.0
+        },
+        "store[2,2]": {
+          "Value": 100.0
+        },
+        "store[2,6]": {
+          "Value": 50.0
+        },
+        "store[3,1]": {
+          "Value": 82.5
+        },
+        "store[3,5]": {
+          "Value": 100.0
+        },
+        "store[3,6]": {
+          "Value": 50.0
+        },
+        "store[4,6]": {
+          "Value": 50.0
+        },
+        "store[5,2]": {
+          "Value": 100.0
+        },
+        "store[5,5]": {
+          "Value": 100.0
+        },
+        "store[5,6]": {
+          "Value": 50.0
+        },
+        "store[6,6]": {
+          "Value": 50.0
+        },
+        "store[7,2]": {
+          "Value": 100.0
+        },
+        "store[7,5]": {
+          "Value": 100.0
+        },
+        "store[7,6]": {
+          "Value": 50.0
+        }
+      }
+    }
+  ],
+  "Solver": [
+    {
+      "Error rc": 0,
+      "Statistics": {
+        "Branch and bound": {
+          "Number of bounded subproblems": 0,
+          "Number of created subproblems": 0
+        }
+      },
+      "Status": "ok",
+      "Termination condition": "optimal",
+      "Time": 0.011929750442504883
+    }
+  ]
+}

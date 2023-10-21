@@ -1,0 +1,189 @@
+{
+    "Problem": [
+        {
+            "Lower bound": 107842.592592593,
+            "Name": "unknown",
+            "Number of constraints": 59,
+            "Number of nonzeros": 210,
+            "Number of objectives": 1,
+            "Number of variables": 90,
+            "Sense": "maximize",
+            "Upper bound": 107842.592592593
+        }
+    ],
+    "Solution": [
+        {
+            "number of solutions": 1,
+            "number of solutions displayed": 1
+        },
+        {
+            "Constraint": "No values",
+            "Gap": 0.0,
+            "Message": null,
+            "Objective": {
+                "obj": {
+                    "Value": 107842.5925925923
+                }
+            },
+            "Problem": {},
+            "Status": "feasible",
+            "Variable": {
+                "buy[02-February,OIL 2]": {
+                    "Value": 250.0
+                },
+                "buy[05-May,OIL 3]": {
+                    "Value": 500.0
+                },
+                "buy[06-June,OIL 2]": {
+                    "Value": 750.0
+                },
+                "buy[06-June,VEG 1]": {
+                    "Value": 659.259259259259
+                },
+                "buy[06-June,VEG 2]": {
+                    "Value": 540.74074074074
+                },
+                "make[01-January,OIL 2]": {
+                    "Value": 250.0
+                },
+                "make[01-January,VEG 1]": {
+                    "Value": 159.259259259259
+                },
+                "make[01-January,VEG 2]": {
+                    "Value": 40.7407407407408
+                },
+                "make[02-February,OIL 2]": {
+                    "Value": 250.0
+                },
+                "make[02-February,VEG 1]": {
+                    "Value": 159.259259259259
+                },
+                "make[02-February,VEG 2]": {
+                    "Value": 40.7407407407408
+                },
+                "make[03-March,OIL 2]": {
+                    "Value": 250.0
+                },
+                "make[03-March,VEG 1]": {
+                    "Value": 159.259259259259
+                },
+                "make[03-March,VEG 2]": {
+                    "Value": 40.7407407407408
+                },
+                "make[04-April,OIL 3]": {
+                    "Value": 250.0
+                },
+                "make[04-April,VEG 1]": {
+                    "Value": 22.2222222222223
+                },
+                "make[04-April,VEG 2]": {
+                    "Value": 177.777777777777
+                },
+                "make[05-May,OIL 3]": {
+                    "Value": 250.0
+                },
+                "make[05-May,VEG 2]": {
+                    "Value": 199.999999999999
+                },
+                "make[06-June,OIL 2]": {
+                    "Value": 250.0
+                },
+                "make[06-June,VEG 1]": {
+                    "Value": 159.259259259259
+                },
+                "make[06-June,VEG 2]": {
+                    "Value": 40.7407407407409
+                },
+                "store[01-January,OIL 1]": {
+                    "Value": 500.0
+                },
+                "store[01-January,OIL 2]": {
+                    "Value": 250.0
+                },
+                "store[01-January,OIL 3]": {
+                    "Value": 500.0
+                },
+                "store[01-January,VEG 1]": {
+                    "Value": 340.740740740741
+                },
+                "store[01-January,VEG 2]": {
+                    "Value": 459.259259259259
+                },
+                "store[02-February,OIL 1]": {
+                    "Value": 500.0
+                },
+                "store[02-February,OIL 2]": {
+                    "Value": 250.0
+                },
+                "store[02-February,OIL 3]": {
+                    "Value": 500.0
+                },
+                "store[02-February,VEG 1]": {
+                    "Value": 181.481481481482
+                },
+                "store[02-February,VEG 2]": {
+                    "Value": 418.518518518518
+                },
+                "store[03-March,OIL 1]": {
+                    "Value": 500.0
+                },
+                "store[03-March,OIL 3]": {
+                    "Value": 500.0
+                },
+                "store[03-March,VEG 1]": {
+                    "Value": 22.2222222222223
+                },
+                "store[03-March,VEG 2]": {
+                    "Value": 377.777777777778
+                },
+                "store[04-April,OIL 1]": {
+                    "Value": 500.0
+                },
+                "store[04-April,OIL 3]": {
+                    "Value": 250.0
+                },
+                "store[04-April,VEG 2]": {
+                    "Value": 200.0
+                },
+                "store[05-May,OIL 1]": {
+                    "Value": 500.0
+                },
+                "store[05-May,OIL 3]": {
+                    "Value": 500.0
+                },
+                "store[05-May,VEG 2]": {
+                    "Value": 9.18844147145692e-13
+                },
+                "store[06-June,OIL 1]": {
+                    "Value": 500.0
+                },
+                "store[06-June,OIL 2]": {
+                    "Value": 500.0
+                },
+                "store[06-June,OIL 3]": {
+                    "Value": 500.0
+                },
+                "store[06-June,VEG 1]": {
+                    "Value": 500.0
+                },
+                "store[06-June,VEG 2]": {
+                    "Value": 500.0
+                }
+            }
+        }
+    ],
+    "Solver": [
+        {
+            "Error rc": 0,
+            "Statistics": {
+                "Branch and bound": {
+                    "Number of bounded subproblems": 0,
+                    "Number of created subproblems": 0
+                }
+            },
+            "Status": "ok",
+            "Termination condition": "optimal",
+            "Time": 0.006417751312255859
+        }
+    ]
+}
