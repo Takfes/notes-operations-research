@@ -1,0 +1,120 @@
+{
+    "Problem": [
+        {
+            "Lower bound": 258795.0,
+            "Name": "unknown",
+            "Number of constraints": 67,
+            "Number of nonzeros": 171,
+            "Number of objectives": 1,
+            "Number of variables": 45,
+            "Sense": "minimize",
+            "Upper bound": 258795.0
+        }
+    ],
+    "Solution": [
+        {
+            "number of solutions": 1,
+            "number of solutions displayed": 1
+        },
+        {
+            "Constraint": "No values",
+            "Gap": 0.0,
+            "Message": null,
+            "Objective": {
+                "obj": {
+                    "Value": 258795.0
+                }
+            },
+            "Problem": {},
+            "Status": "optimal",
+            "Variable": {
+                "p[1,0]": {
+                    "Value": 10250.0
+                },
+                "p[1,1]": {
+                    "Value": 7000.0
+                },
+                "p[2,0]": {
+                    "Value": 10200.0
+                },
+                "p[2,1]": {
+                    "Value": 24300.0
+                },
+                "p[3,0]": {
+                    "Value": 11250.0
+                },
+                "p[3,1]": {
+                    "Value": 17500.0
+                },
+                "p[4,0]": {
+                    "Value": 11000.0
+                },
+                "p[4,1]": {
+                    "Value": 35000.0
+                },
+                "p[5,0]": {
+                    "Value": 10200.0
+                },
+                "p[5,1]": {
+                    "Value": 20850.0
+                },
+                "s[2,1]": {
+                    "Value": 5.0
+                },
+                "s[3,1]": {
+                    "Value": 1.0
+                },
+                "s[4,1]": {
+                    "Value": 10.0
+                },
+                "s[5,1]": {
+                    "Value": 2.0
+                },
+                "w[1,0]": {
+                    "Value": 12.0
+                },
+                "w[1,1]": {
+                    "Value": 4.0
+                },
+                "w[2,0]": {
+                    "Value": 12.0
+                },
+                "w[2,1]": {
+                    "Value": 9.0
+                },
+                "w[3,0]": {
+                    "Value": 12.0
+                },
+                "w[3,1]": {
+                    "Value": 9.0
+                },
+                "w[4,0]": {
+                    "Value": 12.0
+                },
+                "w[4,1]": {
+                    "Value": 10.0
+                },
+                "w[5,0]": {
+                    "Value": 12.0
+                },
+                "w[5,1]": {
+                    "Value": 10.0
+                }
+            }
+        }
+    ],
+    "Solver": [
+        {
+            "Error rc": 0,
+            "Statistics": {
+                "Branch and bound": {
+                    "Number of bounded subproblems": "2087",
+                    "Number of created subproblems": "2087"
+                }
+            },
+            "Status": "ok",
+            "Termination condition": "optimal",
+            "Time": 0.05091381072998047
+        }
+    ]
+}
