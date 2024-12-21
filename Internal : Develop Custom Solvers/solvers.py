@@ -269,16 +269,18 @@ class MIP_BNB_Solver:
                     self.best_objective = obj
                 continue
 
-            # Find branch variable
-            branch_value, branch_index = self._find_branch_variable(sol)
-            branch_upper_bound = self._find_branch_upper_bound(branch_value)
-            branch_lower_bound = self._find_branch_lower_bound(branch_value)
+            # Branch on the first fractional variable
+            fractional_var = next(
+                i for i, x in enumerate(sol) if abs(x - round(x)) >= 1e-6
+            )
+            frac_value = sol[fractional_var]
 
+            # Create two branches
             lower_branch = current_problem.create_branch(
-                branch_index, "upper", branch_upper_bound
+                fractional_var, "upper", np.floor(frac_value)
             )
             upper_branch = current_problem.create_branch(
-                branch_index, "lower", branch_lower_bound
+                fractional_var, "lower", np.ceil(frac_value)
             )
 
             # Add branches to the queue with unique node IDs
@@ -292,19 +294,71 @@ class MIP_BNB_Solver:
             # Update graph
             self.graph.node(
                 left_id,
-                label=f"x{branch_index} ≤ {branch_upper_bound}",
+                label=f"x{fractional_var} ≤ {np.floor(frac_value)}",
                 shape="circle",
             )
             self.graph.edge(str(parent_id), left_id)
 
             self.graph.node(
                 right_id,
-                label=f"x{branch_index} ≥ {branch_lower_bound}",
+                label=f"x{fractional_var} ≥ {np.ceil(frac_value)}",
                 shape="circle",
             )
             self.graph.edge(str(parent_id), right_id)
 
         return self.best_objective, self.best_solution
+
+        # while queue:
+        #     current_problem, parent_id = queue.pop(0)
+        #     obj, sol = Solver.solve_lp(current_problem, verbose=self.verbose)
+
+        #     if obj is None or obj <= self.best_objective:
+        #         # Prune branch
+        #         continue
+
+        #     if self.is_integer(sol):
+        #         # Update the best known integer solution
+        #         if obj > self.best_objective:
+        #             self.best_solution = sol
+        #             self.best_objective = obj
+        #         continue
+
+        #     # Find branch variable
+        #     branch_value, branch_index = self._find_branch_variable(sol)
+        #     branch_upper_bound = self._find_branch_upper_bound(branch_value)
+        #     branch_lower_bound = self._find_branch_lower_bound(branch_value)
+
+        #     lower_branch = current_problem.create_branch(
+        #         branch_index, "upper", branch_upper_bound
+        #     )
+        #     upper_branch = current_problem.create_branch(
+        #         branch_index, "lower", branch_lower_bound
+        #     )
+
+        #     # Add branches to the queue with unique node IDs
+        #     left_id = str(self.node_counter + 1)
+        #     right_id = str(self.node_counter + 2)
+        #     self.node_counter += 2
+
+        #     queue.append((lower_branch, left_id))
+        #     queue.append((upper_branch, right_id))
+
+        #     # Update graph
+        #     self.graph.node(
+        #         left_id,
+        #         label=f"x{branch_index} ≤ {branch_upper_bound}",
+        #         shape="circle",
+        #     )
+        #     self.graph.edge(str(parent_id), left_id)
+
+        #     self.graph.node(
+        #         right_id,
+        #         label=f"x{branch_index} ≥ {branch_lower_bound}",
+        #         shape="circle",
+        #     )
+        #     self.graph.edge(str(parent_id), right_id)
+
+        # return self.best_objective, self.best_solution
 
     def draw_graph(self, filename="branch_and_bound"):
         """Save the B&B tree as a graph image."""
