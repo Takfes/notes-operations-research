@@ -1,0 +1,24 @@
+Metadata-Version: 2.1
+Name: notes-operations-research
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: graphviz>=0.20.3
+Requires-Dist: highspy>=1.8.1
+Requires-Dist: ipykernel>=6.29.5
+Requires-Dist: jupyter>=1.1.1
+Requires-Dist: matplotlib>=3.10.0
+Requires-Dist: openpyxl>=3.1.5
+Requires-Dist: ortools>=9.11.4210
+Requires-Dist: pandas>=2.2.3
+Requires-Dist: pulp>=2.9.0
+Requires-Dist: pyomo>=6.8.2
+Requires-Dist: scipy>=1.14.1
+
+- [Gurobi Jupyter Notebook Examples](https://www.gurobi.com/jupyter_models/)
+- [Gurobi GitHub Repo](https://github.com/Gurobi/modeling-examples)
+- [PuLP Case Studies](https://coin-or.github.io/pulp/CaseStudies/index.html)
+- [Supply Chain Medium Blog](https://s-saci95.medium.com/)
+[Supply Chain Network Design Examples](http://networkdesignbook.com/academic-use/course-materials/)
+- [OR Complete DEPRECATED](https://orcomplete.com/internet/enesbilgin/open-courses-on-operations-research) 
