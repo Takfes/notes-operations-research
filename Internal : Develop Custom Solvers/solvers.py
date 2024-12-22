@@ -127,6 +127,19 @@ OPTIMIZATION_PROBLEMS = [
         "z": 40.0,
         "solution": [0.0, 5.0],
     },
+    {
+        "name": "Problem 5",
+        "url": "https://towardsdatascience.com/a-gentle-introduction-to-branch-bound-d00a4ee1cad",
+        "object": OptimizationProblem(
+            objective_coeffs=[5, 4],
+            constraint_matrix=[[2, 3], [2, 1]],
+            constraint_bounds=[12, 6],
+            variable_bounds=[(0, None), (0, None)],
+            objective_direction="max",
+        ),
+        "z": 18.0,
+        "solution": [2.0, 2.0],
+    },
 ]
 
 
