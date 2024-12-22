@@ -3,6 +3,8 @@ This script provides a framework for solving linear and integer optimization pro
 
 - `solve_lp_function` function solves standalone LP problems.
 - `OptimizationProblem` class encapsulates the definition of an optimization problem.
+- `OPTIMIZATION_PROBLEMS` list contains sample optimization problems for testing.
+- `update_problem_bounds` function creates a new problem with updated variable bounds.
 - `Solver` class provides static methods for solving and plotting LP problems.
 - `LinearSolver` class extends `Solver` for solving linear relaxation problems.
 - `IntegerSolver` class extends `Solver` for solving integer optimization problems using the Branch-and-Bound method.
@@ -11,41 +13,8 @@ This script provides a framework for solving linear and integer optimization pro
 import numpy as np
 from scipy.optimize import linprog
 import matplotlib.pyplot as plt
-
-
-# Standalone LP Solver Function
-def solve_lp_function(
-    objective_coeffs,
-    constraint_matrix,
-    constraint_bounds,
-    variable_bounds,
-    objective_direction="max",
-    verbose=False,
-):
-    """Standalone LP solver function."""
-    if objective_direction == "max":
-        objective_sign = -1
-    elif objective_direction == "min":
-        objective_sign = 1
-    else:
-        raise ValueError("Objective sign must be 'max' or 'min'.")
-
-    result = linprog(
-        c=objective_sign * np.array(objective_coeffs),  # Negate for maximization
-        A_ub=constraint_matrix,
-        b_ub=constraint_bounds,
-        bounds=variable_bounds,
-        method="highs",
-    )
-    if result.success:
-        if verbose:
-            print(75 * "=")
-            print(result)
-            print(75 * "=")
-            print()
-        return result.fun * objective_sign, result.x
-    else:
-        return None, None  # Infeasible
+from pyvis.network import Network
+import networkx as nx
 
 
 class OptimizationProblem:
@@ -92,6 +61,75 @@ class OptimizationProblem:
         return any(var_type != "continuous" for var_type in self.variable_types)
 
 
+OPTIMIZATION_PROBLEMS = [
+    {
+        "name": "Problem 0",
+        "url": "https://www.youtube.com/watch?v=upcsrgqdeNQ",
+        "object": OptimizationProblem(
+            objective_coeffs=[5, 6],
+            constraint_matrix=[[1, 1], [4, 7]],
+            constraint_bounds=[5, 28],
+            variable_bounds=[(0, None), (0, None)],
+            objective_direction="max",
+        ),
+        "z": 27.0,
+        "solution": [3.0, 2.0],
+    },
+    {
+        "name": "Problem 1",
+        "url": "https://www.youtube.com/watch?v=BzKUhT20wDc",
+        "object": OptimizationProblem(
+            objective_coeffs=[5, 4],
+            constraint_matrix=[[1, 1], [10, 6]],
+            constraint_bounds=[5, 45],
+            variable_bounds=[(0, None), (0, None)],
+            objective_direction="max",
+        ),
+        "z": 23.0,
+        "solution": [3.0, 2.0],
+    },
+    {
+        "name": "Problem 2",
+        "url": "https://www.youtube.com/watch?v=BzKUhT20wDc",
+        "object": OptimizationProblem(
+            objective_coeffs=[5, 4],
+            constraint_matrix=[[-3, -2], [-2, -3]],
+            constraint_bounds=[-5, -7],
+            variable_bounds=[(0, None), (0, None)],
+            objective_direction="min",
+        ),
+        "z": 12.0,
+        "solution": [0.0, 3.0],
+    },
+    {
+        "name": "Problem 3",
+        "url": "https://pub.towardsai.net/branch-and-bound-introduction-prior-to-coding-the-algorithm-from-scratch-cc265f2909e7",
+        "object": OptimizationProblem(
+            objective_coeffs=[1, 1],
+            constraint_matrix=[[-1, 1], [8, 2]],
+            constraint_bounds=[2, 19],
+            variable_bounds=[(0, None), (0, None)],
+            objective_direction="max",
+        ),
+        "z": 4.0,
+        "solution": [1.0, 3.0],
+    },
+    {
+        "name": "Problem 4",
+        "url": "https://medium.com/walmartglobaltech/understanding-branch-and-bound-in-optimization-problems-d8117da0e2c5",
+        "object": OptimizationProblem(
+            objective_coeffs=[5, 8],
+            constraint_matrix=[[1, 1], [5, 9]],
+            constraint_bounds=[6, 45],
+            variable_bounds=[(0, None), (0, None)],
+            objective_direction="max",
+        ),
+        "z": 40.0,
+        "solution": [0.0, 5.0],
+    },
+]
+
+
 def update_problem_bounds(problem, var_index, bound_type, bound_value):
     """
     Create a new OptimizationProblem with an updated bound for a specific variable.
@@ -110,6 +148,41 @@ def update_problem_bounds(problem, var_index, bound_type, bound_value):
         problem.objective_direction,
         problem.variable_types,
     )
+
+
+# Standalone LP Solver Function
+def solve_lp_function(
+    objective_coeffs,
+    constraint_matrix,
+    constraint_bounds,
+    variable_bounds,
+    objective_direction="max",
+    verbose=False,
+):
+    """Standalone LP solver function."""
+    if objective_direction == "max":
+        objective_sign = -1
+    elif objective_direction == "min":
+        objective_sign = 1
+    else:
+        raise ValueError("Objective sign must be 'max' or 'min'.")
+
+    result = linprog(
+        c=objective_sign * np.array(objective_coeffs),  # Negate for maximization
+        A_ub=constraint_matrix,
+        b_ub=constraint_bounds,
+        bounds=variable_bounds,
+        method="highs",
+    )
+    if result.success:
+        if verbose:
+            print(75 * "=")
+            print(result)
+            print(75 * "=")
+            print()
+        return result.fun * objective_sign, result.x
+    else:
+        return None, None  # Infeasible
 
 
 class Solver:
@@ -261,154 +334,279 @@ class IntegerSolver(Solver):
     - If the LP relaxation is infeasible, prune the branch.
     """
 
-    def __init__(self, verbose: bool = False):
-        self.verbose = verbose
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def _pop_index(is_fifo):
+        return 0 if is_fifo else -1
+
+    @staticmethod
+    def _is_integer(solution):
+        """Check if all variables in the solution are integers."""
+        return all(abs(x - round(x)) < 1e-6 for x in solution)
+
+    @staticmethod
+    def _find_branch_variable(solution):
+        """Find the variable with the largest fractional part to branch on."""
+        variable_index = int(np.argmax([x - int(x) for x in solution]))
+        variable_value = solution[variable_index].item()
+        return variable_index, variable_value
+
+    def solve(
+        self,
+        problem: OptimizationProblem,
+        verbose: bool = False,
+        is_fifo: bool = True,
+        graph_path: str = "pyvis_networkx.html",
+    ):
+        """Solve the Integer version of the problem."""
+        # initialize the problem
+        verbose = verbose
+        is_fifo = is_fifo
+        pop_index = self._pop_index(is_fifo)
+        G = nx.Graph()
+        problem_index = 0
+        has_solution = False
+        best_solution = None
+        best_objective = None
+        best_node = None
+        results = []
+        solver = Solver()
+        objective_direction = problem.objective_direction
+        best_objective = float("-inf") if objective_direction == "max" else float("inf")
+        root_node_name = "LP0-ROOT"
+        branches = [(root_node_name, problem)]
+
+        while branches:
+            # extract problem from the branches list
+            current_node, current_problem = branches.pop(pop_index)
+            # print(f"Solving {current_node}...")
+
+            # add current node to the graph
+            G.add_node(current_node)
+
+            # set the root node color and position - this will be adjusted only once
+            if problem_index == 0:
+                G.nodes[current_node]["color"] = "black"
+
+            # solve the problem
+            z, solution = solver.solve_lp(current_problem, verbose=verbose)
+
+            # if the problem is infeasible, continue to the next problem
+            if z is None:
+                results.append((current_node, z, solution, "infeasible"))
+                G.nodes[current_node]["color"] = "red"
+                continue
+
+            # if the problem is integer, update the best solution
+            if self._is_integer(solution):
+                if (objective_direction == "max" and z > best_objective) or (
+                    objective_direction == "min" and z < best_objective
+                ):
+                    best_objective = z
+                    best_solution = solution
+                    best_node = current_node
+                    has_solution = True
+                    results.append(
+                        (current_node, z, solution, "integer")
+                    )  # record integer nodes
+                elif (objective_direction == "max" and z < best_objective) or (
+                    objective_direction == "min" and z > best_objective
+                ):
+                    results.append(
+                        (current_node, z, solution, "fathomed")
+                    )  # record fathomed nodes
+                    G.nodes[current_node]["color"] = (
+                        "orange"  # add color for fathomed nodes
+                    )
+                continue
+
+            # if success and not integer, record results and continue
+            results.append((current_node, z, solution, "fractional"))
+
+            # find the variable with the largest fractional part to branch on
+            variable_index, variable_value = self._find_branch_variable(solution)
+
+            # create left subproblem with the lower bound
+            left = update_problem_bounds(
+                current_problem,
+                variable_index,
+                "upper",
+                np.floor(variable_value).item(),
+            )
+            left_problem_name = f"LP{problem_index+1}-x{variable_index}-left"  # create a new problem name
+            branches.append(
+                (left_problem_name, left)
+            )  # add the new problem to the branches list
+            G.add_node(left_problem_name)  # add the new problem to the graph
+            left_edge_name = f"x{variable_index} <= {np.floor(variable_value).item():.0f}"  # create the edge name
+            G.add_edge(
+                current_node, left_problem_name, label=left_edge_name
+            )  # add the edge to the graph
+
+            # create right subproblem with the upper bound
+            right = update_problem_bounds(
+                current_problem, variable_index, "lower", np.ceil(variable_value).item()
+            )
+            right_problem_name = f"LP{problem_index+2}-x{variable_index}-right"  # create a new problem name
+            branches.append(
+                (right_problem_name, right)
+            )  # add the new problem to the branches list
+            G.add_node(right_problem_name)  # add the new problem to the graph
+            right_edge_name = f"x{variable_index} >= {np.ceil(variable_value).item():.0f}"  # create the edge name
+            G.add_edge(
+                current_node, right_problem_name, label=right_edge_name
+            )  # add the edge to the graph
+
+            # update the problem index
+            problem_index += 2
+
+        G.nodes[best_node]["color"] = "green"  # add color for integer nodes
+        net = Network(notebook=True)
+        net.from_nx(G)
+        net.show(graph_path)
+
+        if verbose:
+            print(f"Best integer solution found at node {best_node}:")
+            print(f"Objective Value: {best_objective}")
+            print(f"Solution: {best_solution}")
+
+        if has_solution:
+            return best_objective, best_solution
+        else:
+            return None, None
 
 
-# # https://www.youtube.com/watch?v=upcsrgqdeNQ
-# problem = OptimizationProblem(
-#     objective_coeffs=[5, 6],
-#     constraint_matrix=[[1, 1], [4, 7]],
-#     constraint_bounds=[5, 28],
-#     variable_bounds=[(0, None), (0, None)],
-#     objective_direction="max",
-# )
-
-# https://medium.com/walmartglobaltech/understanding-branch-and-bound-in-optimization-problems-d8117da0e2c5
-problem = OptimizationProblem(
-    objective_coeffs=[5, 8],
-    constraint_matrix=[[1, 1], [5, 9]],
-    constraint_bounds=[6, 45],
-    variable_bounds=[(0, None), (0, None)],
-    objective_direction="max",
-)
+# problem = OPTIMIZATION_PROBLEMS[4]["object"]
+# solver = IntegerSolver()
+# solver.solve(problem)
 
 
-def _is_integer(solution):
-    """Check if all variables in the solution are integers."""
-    return all(abs(x - round(x)) < 1e-6 for x in solution)
+# def _is_integer(solution):
+#     """Check if all variables in the solution are integers."""
+#     return all(abs(x - round(x)) < 1e-6 for x in solution)
 
 
-def _find_branch_variable(solution):
-    """Find the variable with the largest fractional part to branch on."""
-    variable_index = int(np.argmax([x - int(x) for x in solution]))
-    variable_value = solution[variable_index].item()
-    return variable_index, variable_value
+# def _find_branch_variable(solution):
+#     """Find the variable with the largest fractional part to branch on."""
+#     variable_index = int(np.argmax([x - int(x) for x in solution]))
+#     variable_value = solution[variable_index].item()
+#     return variable_index, variable_value
 
 
-def _pop_index(is_fifo):
-    return 0 if is_fifo else -1
+# def _pop_index(is_fifo):
+#     return 0 if is_fifo else -1
 
 
-from pyvis.network import Network
-import networkx as nx
+# problem = OPTIMIZATION_PROBLEMS[4]["object"]
 
-G = nx.Graph()
-is_fifo = False
-pop_index = _pop_index(is_fifo)
-solver = Solver()
-problem_index = 0
-has_solution = False
-best_solution = None
-best_objective = None
-best_node = None
-results = []
+# G = nx.Graph()
+# is_fifo = False
+# pop_index = _pop_index(is_fifo)
 
-# initialize the problem
-objective_direction = problem.objective_direction
-best_objective = float("-inf") if objective_direction == "max" else float("inf")
-root_node_name = "LP0-ROOT"
-branches = [(root_node_name, problem)]
+# # initialize the problem
+# problem_index = 0
+# has_solution = False
+# best_solution = None
+# best_objective = None
+# best_node = None
+# results = []
+# solver = Solver()
+# objective_direction = problem.objective_direction
+# best_objective = float("-inf") if objective_direction == "max" else float("inf")
+# root_node_name = "LP0-ROOT"
+# branches = [(root_node_name, problem)]
 
-while branches:
-    # extract problem from the branches list
-    current_node, current_problem = branches.pop(pop_index)
-    print(f"Solving {current_node}...")
+# while branches:
+#     # extract problem from the branches list
+#     current_node, current_problem = branches.pop(pop_index)
+#     print(f"Solving {current_node}...")
 
-    # add current node to the graph
-    G.add_node(current_node)
+#     # add current node to the graph
+#     G.add_node(current_node)
 
-    # set the root node color and position - this will be adjusted only once
-    if problem_index == 0:
-        G.nodes[current_node]["color"] = "black"
+#     # set the root node color and position - this will be adjusted only once
+#     if problem_index == 0:
+#         G.nodes[current_node]["color"] = "black"
 
-    # solve the problem
-    z, solution = solver.solve_lp(current_problem, verbose=False)
+#     # solve the problem
+#     z, solution = solver.solve_lp(current_problem, verbose=False)
 
-    # if the problem is infeasible, continue to the next problem
-    if z is None:
-        results.append((current_node, z, solution, "infeasible"))
-        G.nodes[current_node]["color"] = "red"
-        continue
+#     # if the problem is infeasible, continue to the next problem
+#     if z is None:
+#         results.append((current_node, z, solution, "infeasible"))
+#         G.nodes[current_node]["color"] = "red"
+#         continue
 
-    # if the problem is integer, update the best solution
-    if _is_integer(solution):
-        if (objective_direction == "max" and z > best_objective) or (
-            objective_direction == "min" and z < best_objective
-        ):
-            best_objective = z
-            best_solution = solution
-            best_node = current_node
-            has_solution = True
-            results.append(
-                (current_node, z, solution, "integer")
-            )  # record integer nodes
-        elif (objective_direction == "max" and z < best_objective) or (
-            objective_direction == "min" and z > best_objective
-        ):
-            results.append(
-                (current_node, z, solution, "fathomed")
-            )  # record fathomed nodes
-            G.nodes[current_node]["color"] = "orange"  # add color for fathomed nodes
-        continue
+#     # if the problem is integer, update the best solution
+#     if _is_integer(solution):
+#         if (objective_direction == "max" and z > best_objective) or (
+#             objective_direction == "min" and z < best_objective
+#         ):
+#             best_objective = z
+#             best_solution = solution
+#             best_node = current_node
+#             has_solution = True
+#             results.append(
+#                 (current_node, z, solution, "integer")
+#             )  # record integer nodes
+#         elif (objective_direction == "max" and z < best_objective) or (
+#             objective_direction == "min" and z > best_objective
+#         ):
+#             results.append(
+#                 (current_node, z, solution, "fathomed")
+#             )  # record fathomed nodes
+#             G.nodes[current_node]["color"] = "orange"  # add color for fathomed nodes
+#         continue
 
-    # if success and not integer, record results and continue
-    results.append((current_node, z, solution, "fractional"))
+#     # if success and not integer, record results and continue
+#     results.append((current_node, z, solution, "fractional"))
 
-    # find the variable with the largest fractional part to branch on
-    variable_index, variable_value = _find_branch_variable(solution)
+#     # find the variable with the largest fractional part to branch on
+#     variable_index, variable_value = _find_branch_variable(solution)
 
-    # create left subproblem with the lower bound
-    left = update_problem_bounds(
-        current_problem, variable_index, "upper", np.floor(variable_value).item()
-    )
-    left_problem_name = (
-        f"LP{problem_index+1}-x{variable_index}-left"  # create a new problem name
-    )
-    branches.append(
-        (left_problem_name, left)
-    )  # add the new problem to the branches list
-    G.add_node(left_problem_name)  # add the new problem to the graph
-    left_edge_name = f"x{variable_index} <= {np.floor(variable_value).item():.0f}"  # create the edge name
-    G.add_edge(
-        current_node, left_problem_name, label=left_edge_name
-    )  # add the edge to the graph
+#     # create left subproblem with the lower bound
+#     left = update_problem_bounds(
+#         current_problem, variable_index, "upper", np.floor(variable_value).item()
+#     )
+#     left_problem_name = (
+#         f"LP{problem_index+1}-x{variable_index}-left"  # create a new problem name
+#     )
+#     branches.append(
+#         (left_problem_name, left)
+#     )  # add the new problem to the branches list
+#     G.add_node(left_problem_name)  # add the new problem to the graph
+#     left_edge_name = f"x{variable_index} <= {np.floor(variable_value).item():.0f}"  # create the edge name
+#     G.add_edge(
+#         current_node, left_problem_name, label=left_edge_name
+#     )  # add the edge to the graph
 
-    # create right subproblem with the upper bound
-    right = update_problem_bounds(
-        current_problem, variable_index, "lower", np.ceil(variable_value).item()
-    )
-    right_problem_name = (
-        f"LP{problem_index+2}-x{variable_index}-right"  # create a new problem name
-    )
-    branches.append(
-        (right_problem_name, right)
-    )  # add the new problem to the branches list
-    G.add_node(right_problem_name)  # add the new problem to the graph
-    right_edge_name = f"x{variable_index} >= {np.ceil(variable_value).item():.0f}"  # create the edge name
-    G.add_edge(
-        current_node, right_problem_name, label=right_edge_name
-    )  # add the edge to the graph
+#     # create right subproblem with the upper bound
+#     right = update_problem_bounds(
+#         current_problem, variable_index, "lower", np.ceil(variable_value).item()
+#     )
+#     right_problem_name = (
+#         f"LP{problem_index+2}-x{variable_index}-right"  # create a new problem name
+#     )
+#     branches.append(
+#         (right_problem_name, right)
+#     )  # add the new problem to the branches list
+#     G.add_node(right_problem_name)  # add the new problem to the graph
+#     right_edge_name = f"x{variable_index} >= {np.ceil(variable_value).item():.0f}"  # create the edge name
+#     G.add_edge(
+#         current_node, right_problem_name, label=right_edge_name
+#     )  # add the edge to the graph
 
-    # update the problem index
-    problem_index += 2
+#     # update the problem index
+#     problem_index += 2
 
-G.nodes[best_node]["color"] = "green"  # add color for integer nodes
-net = Network(notebook=True)
-net.from_nx(G)
-net.show("pyvis_networkx.html")
+# G.nodes[best_node]["color"] = "green"  # add color for integer nodes
+# net = Network(notebook=True)
+# net.from_nx(G)
+# net.show("pyvis_networkx.html")
 
-if has_solution:
-    print(f"Best integer solution found at node {best_node}:")
-    print(f"Objective Value: {best_objective}")
-    print(f"Solution: {best_solution}")
+# if has_solution:
+#     print(f"Best integer solution found at node {best_node}:")
+#     print(f"Objective Value: {best_objective}")
+#     print(f"Solution: {best_solution}")
