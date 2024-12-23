@@ -1,6 +1,7 @@
 import math
 import os
 import time
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,24 +9,33 @@ import pandas as pd
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
+"""
+# ==============================================================
+# DEFINE FUNCTIONS
+# ==============================================================
+"""
 
-def list_files_in_dir(dir_path):
-    return [os.path.join(dir_path, file) for file in os.listdir(dir_path)]
+
+def list_files_in_dir(dir_path, full_path=True):
+    files = [os.path.join(dir_path, file) for file in os.listdir(dir_path)]
+    if not full_path:
+        files = [os.path.basename(file) for file in files]
+    return files
 
 
-def parse_data_from_file(file_path):
-    """Parse a facility location problem from a file"""
-    # Define column names for facilities and customers
-    facilities_columns = ["cost", "capacity", "fx", "fy"]
-    customerers_columns = ["demand", "cx", "cy"]
-
-    with open(file_path) as file:
-        lines = file.readlines()
+def parse_input_data(input_data):
+    """Parse a facility location problem from either a file or directly from a string."""
+    if "\n" in input_data:
+        lines = input_data.split("\n")[:-1]
+    else:
+        with open(file_path) as file:
+            lines = file.readlines()
 
     # Parse problem parameters
     n_facilities, n_customers = map(int, lines[0].split())
 
     # Parse facilities data
+    facilities_columns = ["cost", "capacity", "fx", "fy"]
     facilities_lines = lines[1 : n_facilities + 1]
     assert len(facilities_lines) == n_facilities, (
         f"Expected {n_facilities} facilities, got {len(facilities_lines)}"
@@ -37,6 +47,7 @@ def parse_data_from_file(file_path):
     )
 
     # Parse customers data
+    customerers_columns = ["demand", "cx", "cy"]
     customers_lines = lines[n_facilities + 1 :]
     assert len(customers_lines) == n_customers, (
         f"Expected {n_customers} customers, got {len(customers_lines)}"
@@ -53,6 +64,12 @@ def parse_data_from_file(file_path):
         "facilities": facilities,
         "customers": customers,
     }
+
+
+def write_solution(contents, file_path, file_name):
+    os.makedirs(file_path, exist_ok=True)
+    with open(os.path.join(file_path, file_name), "w") as file:
+        file.write(contents)
 
 
 def euclidean_distance(point1x, point1y, point2x, point2y):
@@ -80,7 +97,7 @@ def plot_facilities_and_customers(facilities, customers):
     plt.show()
 
 
-def calculate_distances(facilities, customers):
+def calculate_distance_matrix(facilities, customers):
     facility_coords = facilities[["fx", "fy"]].to_numpy()
     customer_coords = customers[["cx", "cy"]].to_numpy()
 
@@ -94,32 +111,49 @@ def calculate_distances(facilities, customers):
     ).T
 
 
-data_dir = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data"
+"""
+# ==============================================================
+# MAIN APPLICATION
+# ==============================================================
+"""
 
-file_paths = list_files_in_dir(data_dir)
+# test_data = """3 4
+# 100 100 1065.0 1065.0
+# 100 100 1062.0 1062.0
+# 100 500 0.0 0.0
+# 50 1397.0 1397.0
+# 50 1398.0 1398.0
+# 75 1399.0 1399.0
+# 75 586.0 586.0
+# """
 
-# file_path = file_paths[0]
 
-# file_path = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data/fl_3_1"
-
-# file_path = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data/fl_50_6"
-
-# file_path = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data/fl_100_14"
-
-file_path = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data/fl_200_8"
-
-# file_path = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data/fl_4000_1"
-
-print(f"file_path: {file_path}")
-
+# * DEFINE CONSTANTS
 EXPLORATION_ENABLED = False
+TIME_LIMIT = None  # None
+SOLVER_TEE = False
+SOLVER = "appsi_highs"  # "glpk" "ipopt" "appsi_highs" "cbc"
+STORE_SOLUTION = False
 
-"""
-# ==============================================================
-# parse data
-# ==============================================================
-"""
-data = parse_data_from_file(file_path)
+# Where data is stored
+SOLUTION_DIR = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/sols"
+DATA_DIR = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data"
+
+# Get all data files
+data_files = list_files_in_dir(DATA_DIR, full_path=False)
+# Input file name
+# file_name = data_files[0]
+# file_name = "fl_3_1"
+# file_name = "fl_50_6"
+file_name = "fl_100_14"
+# file_name = "fl_200_8"  # ! takes too much
+# file_name = "fl_4000_1"  # ! takes too much
+# Input file path
+file_path = Path(Path(DATA_DIR) / Path(file_name))
+print(f"File Name: {file_name}")
+
+# * PARSE DATA
+data = parse_input_data(file_name)  # parse_input_data(test_data)
 n_facilities = data["n_facilities"]
 n_customers = data["n_customers"]
 facilities = data["facilities"]
@@ -128,11 +162,7 @@ print(
     f"Size of the problem : {n_facilities} facilities, {n_customers} customers"
 )
 
-"""
-# ==============================================================
-# data exploration
-# ==============================================================
-"""
+# * DATA EXPLORATION
 if EXPLORATION_ENABLED:
     # Explore facility costs
     facility_cost_coefficient_of_variation = (
@@ -158,7 +188,7 @@ if EXPLORATION_ENABLED:
     plot_facilities_and_customers(facilities, customers)
 
     # Explore distances
-    dm_wide = calculate_distances(facilities, customers)
+    dm_wide = calculate_distance_matrix(facilities, customers)
     dm = (
         dm_wide.reset_index()
         .melt(id_vars="index", var_name="facility", value_name="distance")
@@ -190,50 +220,32 @@ if EXPLORATION_ENABLED:
 
     print(average_lowest_distances)
 
-"""
-# ==============================================================
-# create model
-# ==============================================================
-"""
-SOLVER = "appsi_highs"  # "glpk" "ipopt" "appsi_highs" "cbc"
+# * SETUP MODEL
 model = pyo.ConcreteModel()
 
-"""
-# ==============================================================
-# define sets
-# ==============================================================
-"""
+# * DEFINE SETS
 set_facilities = range(n_facilities)
 set_customers = range(n_customers)
 
-"""
-# ==============================================================
-# define variables
-# ==============================================================
-"""
+# * DEFINE VARIABLES
 x = model.x = pyo.Var(set_facilities, domain=pyo.Binary)
 y = model.y = pyo.Var(set_customers, set_facilities, domain=pyo.Binary)
 
-"""
-# ==============================================================
-# define constraints
-# ==============================================================
-"""
-
-# * CONSTRAINT: each facility must be open to serve customers
+# * DEFINE CONSTRAINTS
+# * Constraint: each facility must be open to serve customers
 model.facility_open = pyo.ConstraintList()
 for c in set_customers:
     for f in set_facilities:
         model.facility_open.add(y[c, f] <= x[f])
 # model.facility_open.pprint()
 
-# * CONSTRAINT: each customer must be assigned to exactly one facility
+# * Constraint: each customer must be assigned to exactly one facility
 model.customer_allocation = pyo.ConstraintList()
 for c in set_customers:
     model.customer_allocation.add(sum(y[c, f] for f in set_facilities) == 1)
 # model.customer_allocation.pprint()
 
-# * CONSTRAINT: each facility must sustain the demand of all customers assigned to it
+# * Constraint: each facility must sustain the demand of all customers assigned to it
 model.demand_satisfaction = pyo.ConstraintList()
 for f in set_facilities:
     facility_capacity = facilities.capacity.loc[f]
@@ -243,15 +255,10 @@ for f in set_facilities:
     model.demand_satisfaction.add(facility_demand <= facility_capacity)
 # model.demand_satisfaction.pprint()
 
-"""
-# ==============================================================
-# define objective function
-# ==============================================================
-"""
+# * DEFINE OBJECTIVE FUNCTION
 facility_cost_to_open = sum(
     facilities.cost.loc[f] * x[f] for f in set_facilities
 )
-
 facility_cost_to_serve = sum(
     euclidean_distance(
         facilities.fx.loc[f],
@@ -263,58 +270,66 @@ facility_cost_to_serve = sum(
     for c in set_customers
     for f in set_facilities
 )
-
 model.obj = pyo.Objective(
     expr=facility_cost_to_open + facility_cost_to_serve, sense=pyo.minimize
 )
 
+# * SETUP AND RUN THE SOLVER
+solver = SolverFactory(SOLVER)
+if TIME_LIMIT is not None:
+    solver.options["time_limit"] = TIME_LIMIT
 
-"""
-# ==============================================================
-# solve model
-# ==============================================================
-"""
 print(f"Solving model with {SOLVER=}...")
-opt = SolverFactory(SOLVER)
 start = time.perf_counter()
-results = opt.solve(model)
+results = solver.solve(model, tee=SOLVER_TEE)
 end = time.perf_counter()
+print(f"Execution time : {end - start:.4f} seconds")
 
-"""
-# ==============================================================
-# output results
-# ==============================================================
-"""
+# * OUTPUT RESULTS
+# * Generic solver results
+solver_status = results.solver.status.value
+solver_termination_condition = results.solver.termination_condition.value
+lower_bound = results.problem.lower_bound
+upper_bound = results.problem.upper_bound
+# lower_bound = results.get("Problem").get("Lower bound").value
+# upper_bound = results.get("Problem").get("Upper bound").value
+optimality_gap = 1 - (lower_bound / upper_bound)
 
-# print(f"Solution took {results.solver.time:.4f} seconds")
-print(f"Exeuction time : {end - start:.4f} seconds")
+print("> Solver Report:")
+print(f"* Solver name : {SOLVER}")
+print(f"* Solver execution time : {end - start:.4f} seconds")
+print(f"* Solver status: {solver_status}")
+print(f"* Solver termination condition: {solver_termination_condition}")
+print(f"* Solver optimality gap: {optimality_gap:.2%}")
 
-if (
-    results.solver.status == pyo.SolverStatus.ok
-    and results.solver.termination_condition == pyo.TerminationCondition.optimal
-):
-    objective_value = pyo.value(model.obj)
-    optimization_status = int(
-        results.solver.termination_condition == pyo.TerminationCondition.optimal
+
+# * Required solver results
+objective_value = pyo.value(model.obj)
+is_optimal_solution = int(
+    results.solver.termination_condition == pyo.TerminationCondition.optimal
+)
+
+output_data = f"{objective_value:.2f} {is_optimal_solution}"
+output_data += "\n"
+
+counter = 0
+for c in set_customers:
+    for f in set_facilities:
+        if pyo.value(y[c, f]) > 0.5:
+            output_data += f"{f} "
+            counter += 1
+
+output_data = output_data.strip()
+print("> Solution:\n")
+print(output_data)
+assert counter == n_customers, (
+    f"Number of customers assigned: {counter} vs {n_customers}"
+)
+
+if STORE_SOLUTION:
+    write_solution(
+        contents=output_data, file_path=SOLUTION_DIR, file_name=file_name
     )
-
-    answer = f"{objective_value:.2f} {optimization_status}"
-    answer += "\n"
-
-    counter = 0
-    for c in set_customers:
-        for f in set_facilities:
-            if pyo.value(y[c, f]) > 0.5:
-                answer += f"{f} "
-                counter += 1
-
-    answer = answer.strip()
-    print("Solution:")
-    print(answer)
-    assert counter == n_customers, (
-        f"Number of customers assigned: {counter} vs {n_customers}"
-    )
-
 
 # for f in set_facilities:
 #     print(f"Facility {f} value: {pyo.value(x[f])}")
