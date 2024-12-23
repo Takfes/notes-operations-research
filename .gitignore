@@ -56,3 +56,8 @@ pip-delete-this-directory.txt
 ################
 .env
 .env.*
+
+# Secrets #
+################
+_coursera
+data/
