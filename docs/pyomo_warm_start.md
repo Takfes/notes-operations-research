@@ -26,7 +26,7 @@ def warm_start_from_local_search(model, local_search_solution):
             var.setlb(local_search_solution[var])
             var.setub(local_search_solution[var])
 ```
-source : [claude]()
+source : claude
 
 #### using `set_values()` utility
 
@@ -38,4 +38,4 @@ local_search_solution = {'x[1]': 1, 'x[2]': 0, 'y[1]': 5.0}
 model.set_values(local_search_solution)
 ```
 
-source : [chatgpt]
+source : chatgpt
