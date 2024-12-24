@@ -134,6 +134,15 @@ def load_footprints_from_disk(file_path=FOOTPRINTS):
         return json.load(file)
 
 
+def load_solution_from_disk(file_name, file_path=SOLUTION_DIR):
+    with open(os.path.join(file_path, file_name)) as file:
+        return file.read()
+
+
+# ? DEBUGGING
+# output_data = load_solution_from_disk("fl_25_2")
+# print(output_data)
+
 # ? DEBUGGING
 # data = parse_input_data(Path(DATA_DIR) / Path("fl_50_6"), input_type="file")
 

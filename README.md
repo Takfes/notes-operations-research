@@ -4,3 +4,4 @@
 - [Supply Chain Medium Blog](https://s-saci95.medium.com/)
 [Supply Chain Network Design Examples](http://networkdesignbook.com/academic-use/course-materials/)
 - [OR Complete DEPRECATED](https://orcomplete.com/internet/enesbilgin/open-courses-on-operations-research) 
+- [This repo's Docs](/docs/)

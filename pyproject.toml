@@ -70,6 +70,8 @@ ignore = [
     "F401",
     # Ignore long messages outside the exception class warning
     "TRY003",
+    # Ignore use of `assert` detected
+    "S101",
 ]
 
 [tool.ruff.lint.per-file-ignores]

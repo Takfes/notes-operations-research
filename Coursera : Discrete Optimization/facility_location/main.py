@@ -29,23 +29,25 @@ from pyomo.opt import SolverFactory
 # """
 
 """
-"fl_25_2"         # Facility Location Problem 1
-"fl_50_6"         # Facility Location Problem 2
-"fl_100_7"        # Facility Location Problem 3
-"fl_100_1"        # Facility Location Problem 4 # 1803.6453 seconds | Solver optimality gap: 8.00% | 23161799.54 0
-"fl_200_7"        # Facility Location Problem 5 # 252.3118 seconds | Solver optimality gap: 0.01% | 4711458.83 1
-"fl_500_7"        # Facility Location Problem 6 # 1276.3987 seconds | Solver optimality gap: 5.28% | 27642010.95 0
-"fl_1000_2"       # Facility Location Problem 7
-"fl_2000_2"       # Facility Location Problem 8
+"fl_25_2"   # Facility Location Problem 1 # 0.0361 seconds | optimality gap: 0.00%
+"fl_50_6"   # Facility Location Problem 2 # 0.3735 seconds | optimality gap: 0.01%
+"fl_100_7"  # Facility Location Problem 3 # 0.3905 seconds | optimality gap: 0.00%
+"fl_100_1"  # Facility Location Problem 4 # 1803.6453 seconds | optimality gap: 8.00%
+                                          # 2192.1589 seconds | optimality gap: 7.51%
+"fl_200_7"  # Facility Location Problem 5 # 252.3118 seconds | optimality gap: 0.01%
+"fl_500_7"  # Facility Location Problem 6 # 1276.3987 seconds | optimality gap: 5.28%
+                                          # 2525.2982 seconds | optimality gap: 5.27%
+"fl_1000_2" # Facility Location Problem 7 # 1860.0783 seconds | optimality gap: 2.07%
+"fl_2000_2" # Facility Location Problem 8 # 2029.6632 seconds | optimality gap: 86.39%
 """
 
 # * DEFINE CONSTANTS
 EXPLORATION_ENABLED = False
-STORE_SOLUTION = False
+STORE_SOLUTION = True
 TIME_LIMIT = 60 * 30  # None
 SOLVER_TEE = False
 SOLVER = "appsi_highs"  # "glpk" "ipopt" "appsi_highs" "cbc"
-file_name = "fl_50_6"
+file_name = "fl_2000_2"
 
 # * READ DATA
 footprints = load_footprints_from_disk()
