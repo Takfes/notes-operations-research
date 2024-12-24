@@ -1,3 +1,4 @@
+import json
 import math
 import os
 import time
@@ -23,13 +24,16 @@ def list_files_in_dir(dir_path, full_path=True):
     return files
 
 
-def parse_input_data(input_data):
+def parse_input_data(input_data, input_type="string"):
     """Parse a facility location problem from either a file or directly from a string."""
-    if "\n" in input_data:
+
+    if input_type == "string":
         lines = input_data.split("\n")[:-1]
-    else:
-        with open(file_path) as file:
+    elif input_type == "file":
+        with open(input_data) as file:
             lines = file.readlines()
+    else:
+        raise ValueError(f"Invalid input_type: {input_type}")
 
     # Parse problem parameters
     n_facilities, n_customers = map(int, lines[0].split())
@@ -108,7 +112,22 @@ def calculate_distance_matrix(facilities, customers):
 
     return pd.DataFrame(
         distances, index=facilities.index, columns=customers.index
-    ).T
+    )
+
+
+def load_dict_from_disk(file_path):
+    with open(file_path) as file:
+        return json.load(file)
+
+
+def calculate_data_footprint(data):
+    data_id = (
+        data["n_facilities"]
+        + data["n_customers"]
+        + data["facilities"].sum().sum().item()
+        + data["customers"].sum().sum().item()
+    )
+    return data_id
 
 
 """
@@ -130,37 +149,57 @@ def calculate_distance_matrix(facilities, customers):
 
 # * DEFINE CONSTANTS
 EXPLORATION_ENABLED = False
-TIME_LIMIT = None  # None
+TIME_LIMIT = 60 * 30  # None
 SOLVER_TEE = False
 SOLVER = "appsi_highs"  # "glpk" "ipopt" "appsi_highs" "cbc"
 STORE_SOLUTION = False
 
 # Where data is stored
+FOOTPRINTS = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/footprints.json"
 SOLUTION_DIR = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/sols"
 DATA_DIR = "/Users/takis/Documents/sckool/notes-operations-research/Coursera : Discrete Optimization/facility_location/data"
+
+# Get data ids
+footprints = load_dict_from_disk(FOOTPRINTS)
 
 # Get all data files
 data_files = list_files_in_dir(DATA_DIR, full_path=False)
 # Input file name
+"""
+"fl_25_2"         # Facility Location Problem 1
+"fl_50_6"         # Facility Location Problem 2
+"fl_100_7"        # Facility Location Problem 3
+"fl_100_1"        # Facility Location Problem 4 # 1803.6453 seconds | Solver optimality gap: 8.00% | 23161799.54 0
+"fl_200_7"        # Facility Location Problem 5 # 252.3118 seconds | Solver optimality gap: 0.01% | 4711458.83 1
+"fl_500_7"        # Facility Location Problem 6 # 1276.3987 seconds | Solver optimality gap: 5.28% | 27642010.95 0
+"fl_1000_2"       # Facility Location Problem 7
+"fl_2000_2"       # Facility Location Problem 8
+"""
 # file_name = data_files[0]
-# file_name = "fl_3_1"
-# file_name = "fl_50_6"
-file_name = "fl_100_14"
-# file_name = "fl_200_8"  # ! takes too much
-# file_name = "fl_4000_1"  # ! takes too much
+file_name = "fl_500_7"
 # Input file path
 file_path = Path(Path(DATA_DIR) / Path(file_name))
 print(f"File Name: {file_name}")
 
 # * PARSE DATA
-data = parse_input_data(file_name)  # parse_input_data(test_data)
+data = parse_input_data(
+    file_path, input_type="file"
+)  # parse_input_data(test_data, input_type="string")
+
 n_facilities = data["n_facilities"]
 n_customers = data["n_customers"]
 facilities = data["facilities"]
 customers = data["customers"]
+
 print(
-    f"Size of the problem : {n_facilities} facilities, {n_customers} customers"
+    f"Problem Size : {n_facilities=}, {n_customers=}, total={n_facilities * n_customers:,}"
 )
+
+# * DATA FOOTPRINT
+footprint = calculate_data_footprint(data)
+assert footprints[str(footprint)] == file_name
+print(f"Data Footprint : {footprint}")
+
 
 # * DATA EXPLORATION
 if EXPLORATION_ENABLED:
@@ -174,6 +213,9 @@ if EXPLORATION_ENABLED:
     facilities.cost.hist()
     plt.show()
 
+    facilities.cost.describe()
+    facilities.capacity.describe()
+
     # Explore customer demand
     customer_demand_coefficient_of_variation = (
         customers.demand.std() / customers.demand.mean()
@@ -184,13 +226,21 @@ if EXPLORATION_ENABLED:
     customers.demand.hist()
     plt.show()
 
+    customers.demand.describe()
+    customers.demand.sum()
+
     # Explore geographical distribution of facilities and customers
     plot_facilities_and_customers(facilities, customers)
 
     # Explore distances
-    dm_wide = calculate_distance_matrix(facilities, customers)
+    dm_wide = calculate_distance_matrix(
+        facilities, customers
+    )  # facilities x customers
+
+    dm_wide.sum(axis=1).sort_values(ascending=True)
+
     dm = (
-        dm_wide.reset_index()
+        dm_wide.T.reset_index()
         .melt(id_vars="index", var_name="facility", value_name="distance")
         .rename(columns={"index": "customer"})
     )
