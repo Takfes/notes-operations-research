@@ -18,6 +18,7 @@ Requires-Dist: pyomo>=6.8.2
 Requires-Dist: pyvis>=0.3.2
 Requires-Dist: scipy>=1.14.1
 Requires-Dist: pytest>=8.3.4
+Requires-Dist: tqdm>=4.67.1
 
 - [Gurobi Jupyter Notebook Examples](https://www.gurobi.com/jupyter_models/)
 - [Gurobi GitHub Repo](https://github.com/Gurobi/modeling-examples)
@@ -25,3 +26,4 @@ Requires-Dist: pytest>=8.3.4
 - [Supply Chain Medium Blog](https://s-saci95.medium.com/)
 [Supply Chain Network Design Examples](http://networkdesignbook.com/academic-use/course-materials/)
 - [OR Complete DEPRECATED](https://orcomplete.com/internet/enesbilgin/open-courses-on-operations-research) 
+- [This repo's Docs](/docs/)

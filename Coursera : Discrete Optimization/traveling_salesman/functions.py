@@ -1,12 +1,15 @@
 import json
 import math
 import os
+import time
+from math import ceil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+from scipy.spatial.distance import pdist, squareform
 from tqdm import tqdm
 
 # Data Paths
@@ -33,7 +36,7 @@ def parse_input_data(input_data, input_type="string"):
     """Parse a traveling salesman problem from either a file or directly from a string."""
 
     if input_type == "string":
-        lines = input_data.split("\n")[:-1]
+        lines = input_data.strip().split("\n")
     elif input_type == "file":
         with open(input_data) as file:
             lines = file.readlines()
@@ -72,7 +75,7 @@ def write_solution(contents, file_name, file_path=SOLUTION_DIR):
 
 
 def calculate_data_footprint(data):
-    return data.sum().sum().item()
+    return data["n_locations"] + data["locations"].sum().sum().item()
 
 
 def save_footprints_to_disk(dictionary, file_path=FOOTPRINTS):
@@ -91,11 +94,18 @@ def load_solution_from_disk(file_name, file_path=SOLUTION_DIR):
 
 
 def generate_output(sequence, distance_matrix):
-    obj = calculate_trip_sequence_from_distance_matrix(
+    obj = calculate_sequence_length_from_distance_matrix(
         distance_matrix=distance_matrix, sequence=sequence
     )
     answer = f"{obj} 0\n"
     answer += " ".join(map(str, sequence[:-1]))
+    return answer
+
+
+def generate_dummy_output(sequence, distance_matrix):
+    obj = 999999999.99
+    answer = f"{obj} 0\n"
+    answer += " ".join(map(str, distance_matrix.index.tolist()))
     return answer
 
 
@@ -106,11 +116,19 @@ def generate_output(sequence, distance_matrix):
 """
 
 
+# def calculate_distance_matrix(locations):
+#     coords = locations[["x", "y"]].values
+#     dist_matrix = np.sqrt(
+#         ((coords[:, np.newaxis, :] - coords[np.newaxis, :, :]) ** 2).sum(axis=2)
+#     )
+#     return pd.DataFrame(dist_matrix)
+
+
 def euclidean_distance(point1x, point1y, point2x, point2y):
     return math.sqrt((point1x - point2x) ** 2 + (point1y - point2y) ** 2)
 
 
-def calculate_trip_sequence_from_distance_matrix(
+def calculate_sequence_length_from_distance_matrix(
     distance_matrix, sequence, close_loop=True
 ):
     # Calculate total trip distance using the distance matrix
@@ -124,7 +142,7 @@ def calculate_trip_sequence_from_distance_matrix(
     return total_distance
 
 
-def calculate_trip_sequence_from_locations(
+def calculate_sequence_length_from_locations(
     locations, sequence, close_loop=False
 ):
     # Calculate total trip distance
@@ -163,7 +181,7 @@ def plot_tsp_trip(
         )
 
     # Calculate total trip distance
-    total_distance = calculate_trip_sequence_from_locations(
+    total_distance = calculate_sequence_length_from_locations(
         locations=locations, sequence=sequence, close_loop=close_loop
     )
     plt.figure(figsize=(10, 6))
@@ -206,12 +224,59 @@ def plot_tsp_trip(
     plt.show()
 
 
-def calculate_distance_matrix(locations):
+def calculate_distance_matrix(locations, chunk_size=1000):
+    """
+    Calculate euclidean distance matrix efficiently using chunks and scipy's pdist.
+
+    Args:
+        locations: DataFrame with 'x' and 'y' columns
+        chunk_size: Size of chunks to process at once
+
+    Returns:
+        DataFrame containing the distance matrix
+    """
     coords = locations[["x", "y"]].values
-    dist_matrix = np.sqrt(
-        ((coords[:, np.newaxis, :] - coords[np.newaxis, :, :]) ** 2).sum(axis=2)
-    )
-    return pd.DataFrame(dist_matrix)
+    n = len(coords)
+
+    # For small matrices, use scipy's pdist directly
+    if n <= chunk_size:
+        distances = pdist(coords)
+        return pd.DataFrame(squareform(distances))
+
+    # Initialize output matrix
+    result = np.zeros((n, n))
+
+    # Calculate number of chunks needed
+    n_chunks = ceil(n / chunk_size)
+
+    # Process upper triangle in chunks
+    for i in range(n_chunks):
+        start_i = i * chunk_size
+        end_i = min((i + 1) * chunk_size, n)
+
+        for j in range(i, n_chunks):
+            start_j = j * chunk_size
+            end_j = min((j + 1) * chunk_size, n)
+
+            # Calculate distances for this chunk
+            chunk_distances = np.sqrt(
+                (
+                    (
+                        coords[start_i:end_i, np.newaxis, :]
+                        - coords[np.newaxis, start_j:end_j, :]
+                    )
+                    ** 2
+                ).sum(axis=2)
+            )
+
+            # Store in result matrix
+            result[start_i:end_i, start_j:end_j] = chunk_distances
+
+            # Mirror the distances for lower triangle (skip diagonal chunks)
+            if i != j:
+                result[start_j:end_j, start_i:end_i] = chunk_distances.T
+
+    return pd.DataFrame(result)
 
 
 def tsp_nearest_point_insertion(
@@ -293,7 +358,7 @@ def tsp_greedy_subtrip_insertion(
                 # print(f"Inserting {candidate=} at position {posx}")
                 copy_sequence.insert(posx, candidate)
                 # print(copy_sequence)
-                candidate_size = calculate_trip_sequence_from_distance_matrix(
+                candidate_size = calculate_sequence_length_from_distance_matrix(
                     distance_matrix, copy_sequence, close_loop=True
                 )
                 # print(candidate_size)
@@ -311,18 +376,21 @@ def tsp_greedy_subtrip_insertion(
 
 def tsp_two_opt_improvement(distance_matrix, sequence):
     # TODO : check whether the remaining process needs to be applied on the initial sequence or the best sequence
+    # TODO : add timer functionality, to abort the process if it takes too long and return best result so far
     best_sequence = sequence.copy()
-    best_sequence_length = calculate_trip_sequence_from_distance_matrix(
+    best_sequence_length = calculate_sequence_length_from_distance_matrix(
         distance_matrix, sequence
     )
-    for j in range(1, len(sequence) - 1):
+    for j in tqdm(range(1, len(sequence) - 1)):
         for i in range(1, j - 1):
             start = sequence[:i]
             middle = sequence[i:j]
             end = sequence[j:]
             new_sequence = start + list(reversed(middle)) + end
-            new_sequence_length = calculate_trip_sequence_from_distance_matrix(
-                distance_matrix, new_sequence
+            new_sequence_length = (
+                calculate_sequence_length_from_distance_matrix(
+                    distance_matrix, new_sequence
+                )
             )
             if new_sequence_length < best_sequence_length:
                 best_sequence_length = new_sequence_length
@@ -333,11 +401,12 @@ def tsp_two_opt_improvement(distance_matrix, sequence):
 
 def tsp_swap_improvement(distance_matrix, sequence):
     # TODO : check whether the remaining process needs to be applied on the initial sequence or the best sequence
+    # TODO : add timer functionality, to abort the process if it takes too long and return best result so far
     best_sequence = sequence.copy()
-    best_sequence_length = calculate_trip_sequence_from_distance_matrix(
+    best_sequence_length = calculate_sequence_length_from_distance_matrix(
         distance_matrix, sequence
     )
-    for j in range(1, len(sequence) - 1):
+    for j in tqdm(range(1, len(sequence) - 1)):
         for i in range(1, j):
             new_sequence = sequence.copy()
             # swap the cities
@@ -345,8 +414,10 @@ def tsp_swap_improvement(distance_matrix, sequence):
                 new_sequence[j],
                 new_sequence[i],
             )
-            new_sequence_length = calculate_trip_sequence_from_distance_matrix(
-                distance_matrix, new_sequence
+            new_sequence_length = (
+                calculate_sequence_length_from_distance_matrix(
+                    distance_matrix, new_sequence
+                )
             )
             if new_sequence_length < best_sequence_length:
                 best_sequence_length = new_sequence_length
@@ -361,7 +432,7 @@ def start_point_optimizer(distance_matrix, constructive_heuristic):
     best_start_point = None
     for x in tqdm(distance_matrix.index.tolist()):
         temp_seq = constructive_heuristic(distance_matrix, start_point=x)
-        temp_seq_length = calculate_trip_sequence_from_distance_matrix(
+        temp_seq_length = calculate_sequence_length_from_distance_matrix(
             distance_matrix, temp_seq
         )
         if temp_seq_length < best_distance:
@@ -378,14 +449,14 @@ def hill_climb_corrective(
     distance_matrix, sequence, step_function, max_iter=100
 ):
     best_sequence = sequence.copy()
-    best_sequence_length = calculate_trip_sequence_from_distance_matrix(
+    best_sequence_length = calculate_sequence_length_from_distance_matrix(
         distance_matrix, best_sequence
     )
     counter = 0
 
     while True:
         new_sequence = step_function(distance_matrix, best_sequence)
-        new_sequence_length = calculate_trip_sequence_from_distance_matrix(
+        new_sequence_length = calculate_sequence_length_from_distance_matrix(
             distance_matrix, new_sequence
         )
         counter += 1
@@ -397,6 +468,115 @@ def hill_climb_corrective(
                 f"Hill Climb : Best sequence length: {best_sequence_length:.2f} | Iterations: {counter} | Step function: {step_function.__name__}"
             )
             return best_sequence
+
+
+def tsp_heuristic_wrapper(
+    dm,
+    start_point_optimization=False,
+    hill_climb=False,
+    constructive_heuristic=tsp_greedy_subtrip_insertion,
+    enable_two_opt_improvement=True,
+    enable_swap_improvement=True,
+):
+    start_master = time.perf_counter()
+    counter = 0
+    # constructive heuristic with start_point_optimization ---------------------
+    if start_point_optimization:
+        counter += 1
+        print(f"{counter}.Start Point Optimization...")
+        start = time.perf_counter()
+        sequence, _, _ = start_point_optimizer(dm, constructive_heuristic)
+        end = time.perf_counter()
+        sequence_length = calculate_sequence_length_from_distance_matrix(
+            dm, sequence
+        )
+        print(
+            f"↳took : {end - start:.2f} seconds - trip length {sequence_length:.2f}"
+        )
+    # constructive heuristic without start_point_optimization ------------------
+    else:
+        counter += 1
+        print(
+            f"{counter}.Constructive Heuristic {constructive_heuristic.__name__}..."
+        )
+        start = time.perf_counter()
+        sequence = constructive_heuristic(dm)
+        end = time.perf_counter()
+        sequence_length = calculate_sequence_length_from_distance_matrix(
+            dm, sequence
+        )
+        print(
+            f"↳took : {end - start:.2f} seconds - trip length {sequence_length:.2f}"
+        )
+    # corrective heuristics with hill climb ------------------------------------
+    if hill_climb:
+        # tsp_two_opt_improvement with hill climb ------------------------------
+        if enable_two_opt_improvement:
+            counter += 1
+            print(
+                f"{counter}.Hill Climb - Corrective Heuristic {tsp_two_opt_improvement.__name__}..."
+            )
+            start = time.perf_counter()
+            sequence = hill_climb_corrective(
+                dm, sequence, tsp_two_opt_improvement
+            )
+            end = time.perf_counter()
+            sequence_length = calculate_sequence_length_from_distance_matrix(
+                dm, sequence
+            )
+            print(
+                f"↳took : {end - start:.2f} seconds - trip length {sequence_length:.2f}"
+            )
+        # tsp_swap_improvement with hill climb ---------------------------------
+        if enable_swap_improvement:
+            counter += 1
+            print(
+                f"{counter}.Hill Climb - Corrective Heuristic {tsp_swap_improvement.__name__}..."
+            )
+            start = time.perf_counter()
+            sequence = hill_climb_corrective(dm, sequence, tsp_swap_improvement)
+            end = time.perf_counter()
+            sequence_length = calculate_sequence_length_from_distance_matrix(
+                dm, sequence
+            )
+            print(
+                f"↳took : {end - start:.2f} seconds - trip length {sequence_length:.2f}"
+            )
+    # corrective heuristics without hill climb ---------------------------------
+    else:
+        # tsp_two_opt_improvement without hill climb ---------------------------
+        if enable_two_opt_improvement:
+            counter += 1
+            print(
+                f"{counter}.Two Opt Improvement {tsp_two_opt_improvement.__name__}..."
+            )
+            start = time.perf_counter()
+            sequence = tsp_two_opt_improvement(dm, sequence)
+            end = time.perf_counter()
+            sequence_length = calculate_sequence_length_from_distance_matrix(
+                dm, sequence
+            )
+            print(
+                f"↳took : {end - start:.2f} seconds - trip length {sequence_length:.2f}"
+            )
+        # tsp_swap_improvement without hill climb ------------------------------
+        if enable_swap_improvement:
+            counter += 1
+            print(
+                f"{counter}.Swap Improvement {tsp_swap_improvement.__name__}..."
+            )
+            start = time.perf_counter()
+            sequence = tsp_swap_improvement(dm, sequence)
+            end = time.perf_counter()
+            sequence_length = calculate_sequence_length_from_distance_matrix(
+                dm, sequence
+            )
+            print(
+                f"↳took : {end - start:.2f} seconds - trip length {sequence_length:.2f}"
+            )
+    end_master = time.perf_counter()
+    print(f"Total Time: {end_master - start_master:.2f} seconds.")
+    return sequence
 
 
 # TODO : Simulated Annealing
@@ -465,11 +645,12 @@ def tsp_or_constraint_solver(
         )
     # Setting the time limit
     if time_limit is not None:
-        search_parameters.time_limit.seconds = 30
+        search_parameters.time_limit.seconds = time_limit
     # Setting the logging
     search_parameters.log_search = logging
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
+    # Get the solution
     routes = get_routes(solution, routing, manager)
     sequence = routes[0]
 
