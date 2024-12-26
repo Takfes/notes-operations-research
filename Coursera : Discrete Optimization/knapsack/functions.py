@@ -106,3 +106,7 @@ def generate_dummy_output(sequence, distance_matrix):
 # Knapsack functions
 # ==============================================================
 """
+
+# TODO : MIP pyomo highs sovler
+# TODO : BnB sorting by density worth
+# TODO : DP
