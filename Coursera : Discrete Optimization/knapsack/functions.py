@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 from pathlib import Path
 
@@ -92,11 +93,8 @@ def generate_output(optimal_value, solution_binary, optimized_indicator=0):
     return answer
 
 
-# def generate_dummy_output(sequence, distance_matrix):
-#     obj = 999999999.99
-#     answer = f"{obj} 0\n"
-#     answer += " ".join(map(str, distance_matrix.index.tolist()))
-#     return answer
+def generate_dummy_output(sequence, distance_matrix):
+    pass
 
 
 def timeit(func):
@@ -195,7 +193,7 @@ def vknapsack(items, capacity):
     return k
 
 
-def get_optimal_value(knapsack_table):
+def calculate_total_value_from_knapsack(knapsack_table):
     if isinstance(knapsack_table, np.ndarray):
         k = pd.DataFrame(knapsack_table)
     elif isinstance(knapsack_table, pd.DataFrame):
@@ -203,9 +201,7 @@ def get_optimal_value(knapsack_table):
     return k.iloc[-1, -1].item()
 
 
-def get_selected_items(
-    items, capacity, knapsack_table, solution_as_binary=False
-):
+def get_selected_items_from_knapsack(items, capacity, knapsack_table):
     if isinstance(knapsack_table, np.ndarray):
         k = pd.DataFrame(knapsack_table)
     elif isinstance(knapsack_table, pd.DataFrame):
@@ -220,16 +216,82 @@ def get_selected_items(
             # j-1 is for the index to match the items dataframe - j = 4 means the 4th item in the dataframe, i.e. the 3rd index
             solution_items.append(j - 1)
             i -= items.loc[j - 1, "weight"].item()
+    solution_items.reverse()
+    print("Selected items:", solution_items)
+    return solution_items
 
-    if solution_as_binary:
-        # turn the solution into binary mask - pick or not pick
-        ic = items.copy()
-        ic["selected"] = 0
-        ic.loc[solution_items, "selected"] = 1
-        solution_items_binary = ic["selected"].tolist()
-        print("Selected items binary mask:", solution_items_binary)
-        return solution_items_binary
-    else:
-        solution_items.reverse()
-        print("Selected items:", solution_items)
-        return solution_items
+
+def calculate_selected_items_binary_mask(n_items, solution_items):
+    # turn the solution into binary mask - pick or not pick
+    solution_items_binary = [
+        0 if i not in solution_items else 1 for i in range(n_items)
+    ]
+    print("Selected items binary mask:", solution_items_binary)
+    return solution_items_binary
+
+
+def calculate_total_value_from_solution(items, solution):
+    return items.loc[solution, :].value.sum().item()
+
+
+def greedy_knapsack(items, capacity):
+    # sort items by density
+    ic = items.copy()
+    ic["density"] = ic.value / ic.weight
+    ic = ic.sort_values(by="density", ascending=False)
+
+    solution = []
+    total_weight = 0
+    free_space = capacity - total_weight
+
+    for idx, row in ic.iterrows():
+        if row.weight <= free_space:
+            solution.append(idx)
+            total_weight += row.weight
+            free_space = capacity - total_weight
+        else:
+            continue
+
+    return solution
+
+
+@timeit
+def greedy_knapsack_stochastic(
+    items, capacity, n_iter=100, acceptance_rate=0.5
+):
+    # sort items by density
+    ic = items.copy()
+    ic["density"] = ic.value / ic.weight
+    ic = ic.sort_values(by="density", ascending=False)
+
+    # track the best deterministic solution
+    best_solution = greedy_knapsack(items, capacity)
+    best_solution_value = calculate_total_value_from_solution(
+        items, best_solution
+    )
+
+    # run the greedy algorithm n_iter times infusing randomness
+    while n_iter > 0:
+        solution = []
+        total_weight = 0
+        free_space = capacity - total_weight
+
+        for idx, row in ic.iterrows():
+            if row.weight <= free_space and np.random.rand() > acceptance_rate:
+                solution.append(idx)
+                total_weight += row.weight
+                free_space = capacity - total_weight
+            else:
+                continue
+
+        current_solution_value = calculate_total_value_from_solution(
+            items, solution
+        )
+
+        if current_solution_value > best_solution_value:
+            best_solution = solution
+            best_solution_value = current_solution_value
+
+        n_iter -= 1
+
+    return best_solution
