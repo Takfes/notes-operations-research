@@ -117,9 +117,10 @@ def timeit(func):
 # ==============================================================
 """
 
-# TODO : MIP pyomo highs sovler
+# TODO : MIP pyomo highs sovler - warm start based on heuristics
 # TODO : BnB sorting by density worth
-# TODO : DP
+# TODO : Genetic Algorithms
+# TODO : implemented heuristics could be enhanced based on Tabu search logic
 
 
 @timeit
@@ -295,3 +296,33 @@ def greedy_knapsack_stochastic(
         n_iter -= 1
 
     return best_solution
+
+
+def greedy_knapsack_dataset(items, n_buckets, top_items_per_bucket):
+    """this is based on the observation that there are items that are dominated by others in the dataset. that is several items have almost the same weight, however, one has a higher value. in such a case, the lower value item is dominated by the higher value item. so we can remove the lower value item from the dataset and still get the same value. this is a heuristic to reduce the search space. the idea is to remove dominated items from the dataset. the heuristic is based on the density of the items. the density is the value divided by the weight. the heuristic is as follows:"""
+    ic = items.copy()
+    # calculate density
+    ic["density"] = ic.value / ic.weight
+    ic = ic.sort_values(by="weight", ascending=False)
+    ic = ic.rename_axis("item_id").reset_index()
+    # create weight buckets
+    ic["bucket"] = pd.qcut(ic.index, n_buckets, labels=False)
+    # rank top items in each bucket
+    ic["top_in_bucket"] = (
+        ic.groupby("bucket")["density"]
+        .transform(lambda x: x.rank(ascending=False) <= top_items_per_bucket)
+        .astype(int)
+    )
+    # select top items per bucket
+    items_dom = (
+        ic.query("top_in_bucket == 1")
+        .set_index("item_id")[["value", "weight"]]
+        .copy()
+    )
+    # select small items (irrespective of their value) that were excluded
+    items_dom_min_weight = items_dom.weight.min().item()
+    items_small = items.loc[items.weight < items_dom_min_weight, :]
+    items_heuristic = pd.concat([items_dom, items_small], axis=0).sort_values(
+        by="weight"
+    )
+    return items_heuristic

@@ -12,6 +12,7 @@ from functions import (
     generate_output,
     get_selected_items_from_knapsack,
     greedy_knapsack,
+    greedy_knapsack_dataset,
     greedy_knapsack_stochastic,
     knapsack,
     list_files_in_dir,
@@ -20,41 +21,6 @@ from functions import (
     vknapsack,
     write_solution,
 )
-
-# """
-# # ==============================================================
-# # Ingest mock data
-# # ==============================================================
-# """
-
-# # * MOCK CASES
-# # value - weight
-# input_data = """4 7
-# 16 2
-# 19 3
-# 23 4
-# 28 5
-# """
-# # value - weight
-# input_data = """3 9
-# 5 4
-# 6 5
-# 3 2
-# """
-# # https://medium.com/@yeap0022/solving-knapsack-problem-1-0-using-dynamic-programming-in-python-536070efccc9
-# # value - weight
-# input_data = """3 9
-# 2 2
-# 4 4
-# 7 5
-# """
-
-# data = parse_input_data(input_data, input_type="string")
-# n_items = data["n_items"]
-# capacity = data["capacity"]
-# items = data["items"]
-# print(f"{capacity=:,} | {n_items=}")
-
 
 """
 # ==============================================================
@@ -73,7 +39,7 @@ ks_10000_0  Knapsack Problem 6  capacity=1,000,000 | n_items=10000 | 10,000,000,
 
 # * DEFINE CONSTANTS
 # list_files_in_dir(full_path=False)
-file_name = "ks_400_0"
+file_name = "ks_10000_0"
 
 # * LOAD DATA
 input_data = Path(DATA_DIR) / file_name
@@ -92,9 +58,56 @@ print(f"Footprint: {footprints[str(footprint)]} matches {file_name=}")
 
 """
 # ==============================================================
-# Solve the problem with heuristics
+# Heuristic - reduce the search space - removing dominated items
 # ==============================================================
 """
+# ! use this is for ks_10000_0 - Knapsack Problem 6
+
+n_buckets = 1000  # split items into n_buckets with similar weights
+top_items_per_bucket = 2  # select top density items from each bucket
+
+# discard dominated items + force some smaller items in the dataset
+items_heuristic = greedy_knapsack_dataset(
+    items, n_buckets=n_buckets, top_items_per_bucket=top_items_per_bucket
+)
+
+print(f"heuristic items dataset size: {items_heuristic.shape[0]}")
+
+solution = greedy_knapsack_stochastic(
+    items_heuristic, capacity, n_iter=10_000, acceptance_rate=0.5
+)
+solution_binary = calculate_selected_items_binary_mask(n_items, solution)
+total_value = calculate_total_value_from_solution(items_heuristic, solution)
+
+# quick validation
+assert len(solution_binary) == n_items
+min_weight = items.weight.min().item()
+total_weight = items.loc[solution, :].weight.sum().item()
+leftover = capacity - items.loc[solution, :].weight.sum().item()
+print("Capacity:", capacity)
+print("Total weight:", total_weight)
+print("Leftover capacity:", leftover)
+print("Minimum weight:", min_weight)
+print("Total Value:", total_value)
+
+# ! best solution : 1099888, achieved through :
+# ! greedy_knapsack_dataset n_buckets = 1000, top_items_per_bucket = 2
+# ! achieved through : greedy_knapsack_stochastic n_iter = 10_000, acceptance_rate = 0.5
+
+# * WRITE SOLUTION
+output_data = generate_output(
+    total_value, solution_binary, optimized_indicator=0
+)
+print(f"Solution {file_name}:")
+print(output_data)
+write_solution(output_data, file_name)
+
+"""
+# ==============================================================
+# Solve the problem with Greedy Knapsack
+# ==============================================================
+"""
+# ! use this is for ks_400_0 - Knapsack Problem 4
 
 # test greedy_knapsack
 solution = greedy_knapsack(items, capacity)
@@ -133,6 +146,7 @@ write_solution(output_data, file_name)
 # Solve the problem with Dynamic Programming
 # ==============================================================
 """
+# ! use this is for ks_30_0, ks_50_0, ks_200_0, ks_1000_0
 
 start = time.perf_counter()
 # k = knapsack(items, capacity)
