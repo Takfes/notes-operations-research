@@ -231,7 +231,7 @@ def calculate_selected_items_binary_mask(n_items, solution_items):
 
 
 def calculate_total_value_from_solution(items, solution):
-    return items.loc[solution, :].value.sum().item()
+    return int(items.loc[solution, :].value.sum().item())
 
 
 def greedy_knapsack(items, capacity):
