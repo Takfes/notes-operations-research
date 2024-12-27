@@ -1,6 +1,6 @@
+import heapq
 import json
 import os
-import random
 import time
 from pathlib import Path
 
@@ -326,3 +326,145 @@ def greedy_knapsack_dataset(items, n_buckets, top_items_per_bucket):
         by="weight"
     )
     return items_heuristic
+
+
+class Node:
+    """
+    Intuition around what the Node class represents:
+    - The nodes in the priority queue represent "states" in the decision tree, each corresponding to a specific set of decisions about which items to include or exclude so far.
+    - "What-if" Scenarios: Each node explores a different hypothetical reality where certain items are included, and others are not.
+    - Accumulated Memory: The node remembers the cumulative value, weight, and which items are included in the solution up to this point.
+    - Potential Future Outcomes: Each node has an upper bound (calculated using linear relaxation), which estimates the maximum value that can be achieved if we proceed optimally from that point.
+    """
+
+    def __init__(self, level, value, weight, bound, included):
+        self.level = level  # Level in the decision tree (index of current item)
+        self.value = value  # Total value so far
+        self.weight = weight  # Total weight so far
+        self.bound = bound  # Upper bound (linear relaxation)
+        self.included = (
+            included  # Items included in this branch (binary decision)
+        )
+
+    def __lt__(self, other):
+        # For max-heap behavior in heapq (use negative bound)
+        return (
+            self.bound > other.bound
+        )  # ! this is reversed to make it a max heap
+
+
+@timeit
+def knapsack_branch_and_bound(values, weights, capacity):
+    # Number of items
+    n = len(values)
+
+    # Sort items by value-to-weight ratio
+    items = sorted(
+        zip(values, weights), key=lambda x: x[0] / x[1], reverse=True
+    )
+
+    # Helper to calculate upper bound (linear relaxation)
+    def calculate_bound(node):
+        if node.weight >= capacity:
+            return 0  # Infeasible
+        bound = node.value
+        total_weight = node.weight
+        level = node.level + 1
+
+        # Add items fractionally
+        while level < n and total_weight + items[level][1] <= capacity:
+            bound += items[level][0]
+            total_weight += items[level][1]
+            level += 1
+
+        # Add fractional part of the next item if possible
+        if level < n:
+            bound += (capacity - total_weight) * (
+                items[level][0] / items[level][1]
+            )
+
+        return bound
+
+    # Priority queue for B&B (max-heap using negative bound)
+    pq = []
+    root = Node(level=-1, value=0, weight=0, bound=0, included=[])
+    root.bound = calculate_bound(root)
+    heapq.heappush(pq, root)
+
+    # Track the best solution
+    best_value = 0
+    best_items = []
+
+    # Branch and Bound algorithm
+    while pq:
+        # ! what's the purpose of the priority queue?
+        # heapq ensures that we always process the node with the highest upper bound (most promising potential value) first.
+        # By processing high-bound nodes first, we establish a best solution early. Subsequent nodes with a bound lower than this best solution can be discarded (pruned) immediately.
+        # Thus, pruning happens faster because the queue helps us focus on promising nodes early.
+        current = heapq.heappop(pq)  # Node with highest bound
+
+        # ! this is where the pruning happens
+        # If this node cannot improve the best value, skip it
+        # if bound <= best_value, it means the current node cannot improve upon the best solution already found.
+        # "Can this path ever surpass my current best?" if not, then there is no point in exploring this path further.
+        if current.bound <= best_value:
+            continue
+
+        # ! what is the level?
+        # this is used as an "index" linking the current node to the items list.
+        # it's like a pointer to the current item in the items list - where this node was originated from.
+        # every time we pick a node from the priority queue, we increment ITS level by one.
+        # remember : the items list is sorted by value-to-weight ratio.
+        # thus, it's like knowing where we were left off, and consider items from that level onwards
+        level = current.level + 1
+
+        # Generate left (include) and right (exclude) child nodes
+        # Left child: Include current item
+        if level < n:  # There's an actual item to include
+            item_value, item_weight = items[level]
+            if current.weight + item_weight <= capacity:
+                left = Node(
+                    level=level,
+                    value=current.value + item_value,
+                    weight=current.weight + item_weight,
+                    bound=0,
+                    included=current.included + [1],
+                )
+                left.bound = calculate_bound(left)
+
+                # Update best solution if found
+                if left.value > best_value:
+                    best_value = left.value
+                    best_items = left.included
+
+                heapq.heappush(pq, left)
+
+        # Right child: Exclude current item
+        right = Node(
+            level=level,
+            value=current.value,
+            weight=current.weight,
+            bound=0,
+            included=current.included + [0],
+        )
+        right.bound = calculate_bound(right)
+
+        heapq.heappush(pq, right)
+
+    # Map best_items (sorted order) back to original indices
+    original_indices = [
+        i
+        for i, _ in sorted(
+            enumerate(zip(values, weights)),
+            key=lambda x: x[1][0] / x[1][1],
+            reverse=True,
+        )
+    ]
+
+    best_solution = [0] * n
+    for sorted_idx, bit in enumerate(best_items):
+        if bit == 1:
+            original_idx = original_indices[sorted_idx]
+            best_solution[original_idx] = 1
+
+    return best_value, best_solution

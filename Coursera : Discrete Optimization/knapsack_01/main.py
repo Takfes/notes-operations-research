@@ -15,6 +15,7 @@ from functions import (
     greedy_knapsack_dataset,
     greedy_knapsack_stochastic,
     knapsack,
+    knapsack_branch_and_bound,
     list_files_in_dir,
     load_footprints_from_disk,
     parse_input_data,
@@ -39,7 +40,7 @@ ks_10000_0  Knapsack Problem 6  capacity=1,000,000 | n_items=10000 | 10,000,000,
 
 # * DEFINE CONSTANTS
 # list_files_in_dir(full_path=False)
-file_name = "ks_10000_0"
+file_name = "ks_30_0"
 
 # * LOAD DATA
 input_data = Path(DATA_DIR) / file_name
@@ -54,6 +55,39 @@ footprints = load_footprints_from_disk()
 footprint = calculate_data_footprint(data)
 assert footprints[str(footprint)] == file_name
 print(f"Footprint: {footprints[str(footprint)]} matches {file_name=}")
+
+
+"""
+# ==============================================================
+# Solve the problem Branch and Bound w/ Linear Relaxation
+# ==============================================================
+"""
+# ! have not thoroughly tested - implemented after submission
+
+value, solution_binary = knapsack_branch_and_bound(
+    # values=items.value.tolist(),
+    # weights=items.weight.tolist(),
+    # capacity=capacity,
+    values=[60, 100, 120],
+    weights=[10, 20, 30],
+    capacity=50,
+)
+solution = np.where(solution_binary)[0].tolist()
+
+# extract optimal value
+total_value = calculate_total_value_from_solution(items, solution)
+print("Total value:", total_value)
+
+# quick validation
+assert len(solution_binary) == n_items
+min_weight = items.weight.min().item()
+total_weight = items.loc[solution, :].weight.sum().item()
+leftover = capacity - items.loc[solution, :].weight.sum().item()
+print("Capacity:", capacity)
+print("Total weight:", total_weight)
+print("Leftover capacity:", leftover)
+print("Minimum weight:", min_weight)
+print("Total Value:", total_value)
 
 
 """
