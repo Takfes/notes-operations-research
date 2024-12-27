@@ -1,9 +1,10 @@
 import json
 import os
-import random
 import time
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -41,7 +42,7 @@ def parse_input_data(input_data, input_type="string"):
     data_columns = ["e1", "e2"]
     lines = [x for x in lines if x != "\n"][1:]
     assert len(lines) == n_edges, f"Expected {n_edges} items, got {len(lines)}"
-    edges = pd.DataFrame(
+    dataset = pd.DataFrame(
         [list(map(int, x.split())) for x in lines],
         columns=data_columns,
         dtype=int,
@@ -50,13 +51,15 @@ def parse_input_data(input_data, input_type="string"):
     return {
         "n_nodes": n_nodes,
         "n_edges": n_edges,
-        "edges": edges,
+        "dataset": dataset,
     }
 
 
 # TODO : Adjust this to problem specific data
 def calculate_data_footprint(data):
-    return data["n_nodes"] + data["n_edges"] + data["edges"].sum().sum().item()
+    return (
+        data["n_nodes"] + data["n_edges"] + data["dataset"].sum().sum().item()
+    )
 
 
 # TODO : Adjust this to problem specific data
@@ -137,39 +140,225 @@ def fake_solver(input_data):
 # ==============================================================
 """
 
+# TODO : https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/EKeqEnpMEe2RnwrIxQ9Aww
+
+
+def plot_graph(edges, colors, node_size=250):
+    G = nx.Graph()
+    G.add_edges_from(edges)
+
+    color_map = []
+    for node in G:
+        color_map.append(colors[node])
+
+    pos = nx.spring_layout(G)
+    nx.draw(
+        G,
+        pos,
+        node_color=color_map,
+        with_labels=True,
+        node_size=node_size,
+        font_color="white",
+        edge_color="gray",
+    )
+    plt.show()
+
+
+class Vertex:
+    def __init__(self, index):
+        self.index = index
+        self.neighbors = []
+        self.color = None
+
+    def __repr__(self):
+        return f"N({self.index}): c={self.color}, s={self.saturation}, d={self.degree}"
+
+    def __str__(self):
+        return f"N({self.index}): c={self.color}, s={self.saturation}, d={self.degree}"
+
+    def add_neighbor(self, node):
+        if node not in self.neighbors:
+            self.neighbors.append(node)
+
+    def set_color(self, color):
+        self.color = color
+
+    @property
+    def neighbor_colors(self):
+        return [neighbor.color for neighbor in self.neighbors]
+
+    @property
+    def saturation(self):
+        return len({x for x in self.neighbor_colors if x is not None})
+
+    @property
+    def degree(self):
+        return len(self.neighbors)
+
+
+class DSatur:
+    def __init__(self, n_nodes: int, edges: list[tuple[int, int]]):
+        self.colors = []
+        self.nodes = [Vertex(i) for i in range(n_nodes)]
+        # self.nodes = [Vertex(i) for i in list(set(sum(edges, ())))]
+        for e1, e2 in edges:
+            self.nodes[e1].add_neighbor(self.nodes[e2])
+            self.nodes[e2].add_neighbor(self.nodes[e1])
+
+    @property
+    def cost(self):
+        return len(set(self.colors))
+
+    def pick_a_color(self, node):
+        available_colors = set(self.colors).difference(
+            set(node.neighbor_colors)
+        )
+        if available_colors:
+            return min(available_colors)
+        else:
+            self.colors.append(len(self.colors) + 1)
+            return max(self.colors)
+
+    @timeit
+    def solve(self, verbose=False):
+        q = [x for x in self.nodes]
+        counter = 1
+        while q:
+            q.sort(key=lambda x: (x.saturation, x.degree), reverse=True)
+
+            if verbose:
+                print(
+                    f"> Start iteration {counter}, len(q)={len(q)}, len(self.nodes)={len(self.nodes)}"
+                )
+                print("* Sorted list of nodes (q) --->")
+                print(q)
+
+            node = q.pop(0)
+            color = self.pick_a_color(node)
+
+            if verbose:
+                print(f"* Selected node before setting color: {node}")
+
+            node.set_color(color)
+
+            if verbose:
+                print(f"* Selected node after setting color: {node}")
+                print("* Original -unsorted- list of nodes --->")
+                print(self.nodes)
+                print(
+                    f"< End iteration {counter}, len(q)={len(q)}, len(self.nodes)={len(self.nodes)}"
+                )
+                print()
+
+            counter += 1
+
 
 """
-# source :
-https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/EKeqEnpMEe2RnwrIxQ9Aww
-
-# region - Initialization -
-
-# Decision Variables: Instantiate an empty dictionary which contains the chosen color of each node.
-# Other Variables: Instantiate a list where each entry is a list with all nodes a particular node is connected to.
-# Instantiate a list where each entry is the number of nodes a particular node is connected to.
-# Instantiate a state queue with unexplored feasible states.
-# Domains: Instantiate a dictionary with one entry for each node with a list of possible colors.
-
-# endregion
-
-while True:
-    # region - Branching -
-
-    # Take the remaining uncolored node with smallest domain size.
-    # Take the lowest color number possible.
-    # Symmetry Breaking: If a new color is taken, take the smallest new one, unassigned colors are interchangeable.
-    # Store this exact state as feasible state to enable backtracking, if there is still another option left
-    # Remove the entry from the node domains so that the value is fixed
-
-    while True:
-        # region - Pruning and Feasibility Check -
-
-        # Break the loop when no more pruning can be conducted.
-        # Taking into account the latest branching use constraints to remove domains from variables.
-        # If there is only one possible color remaining for a node assign it.
-        # If the connected node is colored it cannot have the same color -> not feasible 
-        # If a node has a empty domain -> not feasible
-
-    # If feasible continue with the next loop, otherwise backtrack to the last feasible state.
-
+# ==============================================================
+# Reference Implementation
+# ==============================================================
 """
+
+
+# class Color:
+#     index: int
+#     n_nodes: int
+
+#     def __init__(self, index) -> None:
+#         self.index = index
+#         self.n_nodes = 0
+
+#     def __repr__(self):
+#         return f"C{self.index}"
+
+#     def add_node(self):
+#         self.n_nodes = self.n_nodes + 1
+
+
+# class Node:
+#     neighbors: list["Node"]
+#     index: int
+#     color: Color
+
+#     def __init__(self, index):
+#         self.index = index
+#         self.neighbors = []
+#         self.color = None
+
+#     def __repr__(self) -> str:
+#         return f"N{self.index}|{self.color}|{self.saturation}"
+
+#     def add_neighbor(self, node: "Node"):
+#         if node not in self.neighbors:
+#             self.neighbors.append(node)
+
+#     def set_color(self, color: Color):
+#         self.color = color
+#         color.add_node()
+
+#     @property
+#     def neighbor_colors(self):
+#         return [n.color for n in self.neighbors if n.color is not None]
+
+#     @property
+#     def saturation(self):
+#         return len(set(n.color for n in self.neighbors if n.color is not None))
+
+#     @property
+#     def degree(self):
+#         return len(self.neighbors)
+
+
+# class DSatur:
+#     N: list[Node]
+#     C: list[Color]
+#     history: list[Node]
+
+#     def __init__(self, nodes: list[int], edges: list[tuple[int, int]]):
+#         N = [Node(i) for i in nodes]
+#         for e in edges:
+#             i, j = e
+#             N[i].add_neighbor(N[j])
+#             N[j].add_neighbor(N[i])
+#         self.N = N
+#         self.C = []
+#         self.history = []
+
+#     def find_next_color(self, node: Node) -> Color:
+#         next_color = None
+#         for c in self.C:
+#             if c not in node.neighbor_colors:
+#                 next_color = c
+#                 break
+#         if next_color is None:
+#             next_color = Color(len(self.C) + 1)
+#             self.C.append(next_color)
+#         return next_color
+
+#     @timeit
+#     def solve(self, save_history=False):
+#         Q = [n for n in self.N]  # Pool of uncolored nodes
+#         counter = 0
+#         while len(Q) > 0:
+#             Q.sort(key=lambda x: (x.saturation, x.degree), reverse=True)
+#             n: Node = Q.pop(0)
+#             next_color = self.find_next_color(n)
+#             n.set_color(next_color)
+#             if save_history:
+#                 self.history.append(n)
+#             counter += 1
+#         self.C.sort(key=lambda x: x.n_nodes, reverse=True)
+
+#     @property
+#     def cost(self):
+#         return len(self.C)
+
+
+# start = time.perf_counter()
+# nodes = [x for x in range(n_nodes)]
+# dsat = DSatur(nodes, edges)
+# dsat.solve()
+# end = time.perf_counter()
+# cost_ref = dsat.cost
+# solution_ref = [n.color.index for n in dsat.N]
+# print(f"DSatur executed in {end - start:.4f} seconds")
