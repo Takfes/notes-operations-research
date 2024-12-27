@@ -136,3 +136,40 @@ def fake_solver(input_data):
 # problem specific functions
 # ==============================================================
 """
+
+
+"""
+# source :
+https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/EKeqEnpMEe2RnwrIxQ9Aww
+
+# region - Initialization -
+
+# Decision Variables: Instantiate an empty dictionary which contains the chosen color of each node.
+# Other Variables: Instantiate a list where each entry is a list with all nodes a particular node is connected to.
+# Instantiate a list where each entry is the number of nodes a particular node is connected to.
+# Instantiate a state queue with unexplored feasible states.
+# Domains: Instantiate a dictionary with one entry for each node with a list of possible colors.
+
+# endregion
+
+while True:
+    # region - Branching -
+
+    # Take the remaining uncolored node with smallest domain size.
+    # Take the lowest color number possible.
+    # Symmetry Breaking: If a new color is taken, take the smallest new one, unassigned colors are interchangeable.
+    # Store this exact state as feasible state to enable backtracking, if there is still another option left
+    # Remove the entry from the node domains so that the value is fixed
+
+    while True:
+        # region - Pruning and Feasibility Check -
+
+        # Break the loop when no more pruning can be conducted.
+        # Taking into account the latest branching use constraints to remove domains from variables.
+        # If there is only one possible color remaining for a node assign it.
+        # If the connected node is colored it cannot have the same color -> not feasible 
+        # If a node has a empty domain -> not feasible
+
+    # If feasible continue with the next loop, otherwise backtrack to the last feasible state.
+
+"""
