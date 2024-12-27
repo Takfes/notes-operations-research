@@ -40,9 +40,9 @@ def parse_input_data(input_data, input_type="string"):
     lines = [x for x in lines if x != "\n"][1:]
     assert len(lines) == info1, f"Expected {info1} items, got {len(lines)}"
     dataset = pd.DataFrame(
-        [x.split() for x in lines],
+        [list(map(int, x.split())) for x in lines],
         columns=data_columns,
-        dtype=float,
+        dtype=int,
     )
 
     return {

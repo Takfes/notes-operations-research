@@ -9,22 +9,24 @@ from functions import (
 )
 
 # Get all data files
-data_files = list_files_in_dir(full_path=False)
-data_ids = {}
+datafiles = list_files_in_dir(full_path=False)
+footprints = {}
 
-for idx, file_name in enumerate(data_files, start=1):
+for idx, file_name in enumerate(datafiles, start=1):
     input_data = DATA_DIR / Path(file_name)
     data = parse_input_data(input_data, input_type="file")
-    data_id = calculate_data_footprint(data)
-    if data_id in data_ids:
+    footprint = calculate_data_footprint(data)
+    if footprint in footprints:
         print(
-            f"Duplicate data id found between {data_ids[data_id]} and {file_name}"  # tsp_318_1 and tsp_318_2
+            f"Duplicate data id found between {footprints[footprint]} and {file_name}"  # tsp_318_1 and tsp_318_2
         )
         continue
-    data_ids[data_id] = file_name
-    print(f"File Name: {file_name} | Data Id: {data_id=}")
+    footprints[footprint] = file_name
+    print(f"File Name: {file_name} | Data Id: {footprint=}")
 
-assert idx == len(data_ids), f"Expected {len(data_files)} data files, got {idx}"
+assert idx == len(footprints), (
+    f"Expected {len(datafiles)} data files, got {idx}"
+)
 
-# Save data_ids dictionary to disk
-save_footprints_to_disk(data_ids)
+# Save footprints dictionary to disk
+save_footprints_to_disk(footprints)
