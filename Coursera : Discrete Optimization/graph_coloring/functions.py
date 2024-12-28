@@ -1,12 +1,14 @@
 import json
 import os
 import time
+from gc import enable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+from ortools.sat.python import cp_model
 from tqdm import tqdm
 
 # Data Paths
@@ -140,8 +142,6 @@ def fake_solver(input_data):
 # ==============================================================
 """
 
-# TODO : https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/EKeqEnpMEe2RnwrIxQ9Aww
-
 
 def plot_graph(edges, colors, node_size=250):
     G = nx.Graph()
@@ -164,7 +164,86 @@ def plot_graph(edges, colors, node_size=250):
     plt.show()
 
 
-class Vertex:
+def validate_solution(edges, solution):
+    for e1, e2 in edges:
+        if solution[e1] == solution[e2]:
+            raise ValueError(
+                f"Invalid solution: {e1=} and {e2=} have same color"
+            )
+        return True
+
+
+def or_cp_obj_opt(n_nodes, edges, time_limit=None, enable_logging=False):
+    model = cp_model.CpModel()
+    nodes = list(range(n_nodes))
+    max_color = len(nodes) - 1
+    node_colors = {
+        node: model.NewIntVar(0, max_color, f"color_{node}") for node in nodes
+    }
+
+    # Add constraints for different colors on connected nodes
+    for n1, n2 in edges:
+        model.Add(node_colors[n1] != node_colors[n2])
+
+    # Minimize the maximum color index used
+    max_color_var = model.NewIntVar(0, max_color, "max_color_var")
+    model.AddMaxEquality(max_color_var, [node_colors[node] for node in nodes])
+    model.Minimize(max_color_var)
+
+    solver = cp_model.CpSolver()
+
+    # Configure the solver
+    solver.parameters.log_search_progress = enable_logging
+    if time_limit is not None:
+        solver.parameters.max_time_in_seconds = time_limit
+
+    # Solve the model
+    status = solver.Solve(model)
+
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        return {node: solver.Value(node_colors[node]) for node in nodes}
+    else:
+        return None
+
+
+def or_cp_iter_sat(
+    n_nodes,
+    edges,
+    start_colors=3,
+    ascending=True,
+    time_limit=None,
+    enable_logging=False,
+):
+    nodes = list(range(n_nodes))
+    color_range = (
+        range(start_colors, len(nodes) + 1)
+        if ascending
+        else range(start_colors, 2, -1)
+    )
+
+    for max_colors in tqdm(color_range):
+        print(f"Trying with {max_colors=} colors")
+        model = cp_model.CpModel()
+        node_colors = {
+            node: model.NewIntVar(0, max_colors - 1, f"color_{node}")
+            for node in nodes
+        }
+
+        for n1, n2 in edges:
+            model.Add(node_colors[n1] != node_colors[n2])
+
+        solver = cp_model.CpSolver()
+        solver.parameters.log_search_progress = enable_logging
+        if time_limit is not None:
+            solver.parameters.max_time_in_seconds = time_limit
+        status = solver.Solve(model)
+
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+            return {node: solver.Value(node_colors[node]) for node in nodes}
+    return None
+
+
+class Node:
     def __init__(self, index):
         self.index = index
         self.neighbors = []
@@ -199,8 +278,7 @@ class Vertex:
 class DSatur:
     def __init__(self, n_nodes: int, edges: list[tuple[int, int]]):
         self.colors = []
-        self.nodes = [Vertex(i) for i in range(n_nodes)]
-        # self.nodes = [Vertex(i) for i in list(set(sum(edges, ())))]
+        self.nodes = [Node(i) for i in range(n_nodes)]
         for e1, e2 in edges:
             self.nodes[e1].add_neighbor(self.nodes[e2])
             self.nodes[e2].add_neighbor(self.nodes[e1])
@@ -251,114 +329,3 @@ class DSatur:
                 print()
 
             counter += 1
-
-
-"""
-# ==============================================================
-# Reference Implementation
-# ==============================================================
-"""
-
-
-# class Color:
-#     index: int
-#     n_nodes: int
-
-#     def __init__(self, index) -> None:
-#         self.index = index
-#         self.n_nodes = 0
-
-#     def __repr__(self):
-#         return f"C{self.index}"
-
-#     def add_node(self):
-#         self.n_nodes = self.n_nodes + 1
-
-
-# class Node:
-#     neighbors: list["Node"]
-#     index: int
-#     color: Color
-
-#     def __init__(self, index):
-#         self.index = index
-#         self.neighbors = []
-#         self.color = None
-
-#     def __repr__(self) -> str:
-#         return f"N{self.index}|{self.color}|{self.saturation}"
-
-#     def add_neighbor(self, node: "Node"):
-#         if node not in self.neighbors:
-#             self.neighbors.append(node)
-
-#     def set_color(self, color: Color):
-#         self.color = color
-#         color.add_node()
-
-#     @property
-#     def neighbor_colors(self):
-#         return [n.color for n in self.neighbors if n.color is not None]
-
-#     @property
-#     def saturation(self):
-#         return len(set(n.color for n in self.neighbors if n.color is not None))
-
-#     @property
-#     def degree(self):
-#         return len(self.neighbors)
-
-
-# class DSatur:
-#     N: list[Node]
-#     C: list[Color]
-#     history: list[Node]
-
-#     def __init__(self, nodes: list[int], edges: list[tuple[int, int]]):
-#         N = [Node(i) for i in nodes]
-#         for e in edges:
-#             i, j = e
-#             N[i].add_neighbor(N[j])
-#             N[j].add_neighbor(N[i])
-#         self.N = N
-#         self.C = []
-#         self.history = []
-
-#     def find_next_color(self, node: Node) -> Color:
-#         next_color = None
-#         for c in self.C:
-#             if c not in node.neighbor_colors:
-#                 next_color = c
-#                 break
-#         if next_color is None:
-#             next_color = Color(len(self.C) + 1)
-#             self.C.append(next_color)
-#         return next_color
-
-#     @timeit
-#     def solve(self, save_history=False):
-#         Q = [n for n in self.N]  # Pool of uncolored nodes
-#         counter = 0
-#         while len(Q) > 0:
-#             Q.sort(key=lambda x: (x.saturation, x.degree), reverse=True)
-#             n: Node = Q.pop(0)
-#             next_color = self.find_next_color(n)
-#             n.set_color(next_color)
-#             if save_history:
-#                 self.history.append(n)
-#             counter += 1
-#         self.C.sort(key=lambda x: x.n_nodes, reverse=True)
-
-#     @property
-#     def cost(self):
-#         return len(self.C)
-
-
-# start = time.perf_counter()
-# nodes = [x for x in range(n_nodes)]
-# dsat = DSatur(nodes, edges)
-# dsat.solve()
-# end = time.perf_counter()
-# cost_ref = dsat.cost
-# solution_ref = [n.color.index for n in dsat.N]
-# print(f"DSatur executed in {end - start:.4f} seconds")
