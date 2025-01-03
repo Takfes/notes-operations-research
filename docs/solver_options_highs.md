@@ -1,27 +1,27 @@
 ```python
 def solve_model(model):
-        solver_name = "appsi_highs"
-        solver = pyo.SolverFactory(solver_name)
-        solver.options['parallel'] = 'on'
-        solver.options['time_limit'] = 3600/2  # 30 minutes time limit
-        solver.options['presolve'] = 'on'
-        solver.options['mip_rel_gap'] = 0.01  # 1% relative gap
-        solver.options['simplex_strategy'] = 1  # Dual simplex
-        solver.options['simplex_max_concurrency'] = 8  # Max concurrency
-        solver.options['mip_min_logging_interval'] = 10  # Log every 10 seconds
-        solver.options['mip_heuristic_effort'] = 0.2  # Increase heuristic effort
+    solver_name = "appsi_highs"
+    solver = pyo.SolverFactory(solver_name)
+    solver.options['parallel'] = 'on'
+    solver.options['time_limit'] = 3600/2  # 30 minutes time limit
+    solver.options['presolve'] = 'on'
+    solver.options['mip_rel_gap'] = 0.01  # 1% relative gap
+    solver.options['simplex_strategy'] = 1  # Dual simplex
+    solver.options['simplex_max_concurrency'] = 8  # Max concurrency
+    solver.options['mip_min_logging_interval'] = 10  # Log every 10 seconds
+    solver.options['mip_heuristic_effort'] = 0.2  # Increase heuristic effort
 
-        result = solver.solve(model, tee=True)
+    result = solver.solve(model, tee=True)
 
-        # Check solver status
-        if result.solver.termination_condition == pyo.TerminationCondition.optimal:
-            print("Optimal solution found.")
-        elif result.solver.termination_condition == pyo.TerminationCondition.maxTimeLimit:
-            print("Time limit reached, solution may be suboptimal.")
-        else:
-            print(f"Solver terminated with condition: {result.solver.termination_condition}")
+    # Check solver status
+    if result.solver.termination_condition == pyo.TerminationCondition.optimal:
+        print("Optimal solution found.")
+    elif result.solver.termination_condition == pyo.TerminationCondition.maxTimeLimit:
+        print("Time limit reached, solution may be suboptimal.")
+    else:
+        print(f"Solver terminated with condition: {result.solver.termination_condition}")
 
-        print(result)
+    print(result)
 
 solve_model(model)
 ```
