@@ -1,9 +1,11 @@
-
-
 - [Medium : DSatur & MIP](https://towardsdatascience.com/the-graph-coloring-problem-exact-and-heuristic-solutions-169dce4d88ab)
 - [Medium : Simple greedy](https://python.plainenglish.io/solve-graph-coloring-problem-with-greedy-algorithm-and-python-6661ab4154bd)
 - [Graph Coloring OR-Tools](https://zapcircle.net/google-or-tools-part-2/)
 - [OR Tools & Greedy - github repo](https://github.com/SteffenHaeussler/discrete_optimization/blob/master/coloring/coloring.py)
 - [Gurobi MIP + Greedy - github repo](https://github.com/jixinfeng/discopt-soln/blob/master/week-03-coloring/solver.py)
 - [GeeksforGeeks Graph Coloring from scratch](https://www.geeksforgeeks.org/graph-coloring-algorithm-in-python/)
+- [Tiny Tiny Choco Solver in Python](https://choco-solver.org/tinytiny/#/6/3)
+
 - [Coursera Discussion Hints](https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/EKeqEnpMEe2RnwrIxQ9Aww)
+- [Coursera Discussion Hints](https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/Yng7SR_zEeeuuQ7tmHEh3A)
+- [Coursera Discussion Hints](https://www.coursera.org/learn/discrete-optimization/discussions/forums/R8Z6rVxEEea-8wq_-anwpw/threads/GRG50YLJEemecQplhNkpvg)
