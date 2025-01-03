@@ -13,7 +13,7 @@ from functions import (
 datafiles = list_files_in_dir(full_path=False)
 footprints = {}
 
-for idx, file_name in enumerate(datafiles, start=1):
+for idx, file_name in enumerate(datafiles, start=1):  # noqa: B007
     input_data = DATA_DIR / Path(file_name)
     data = parse_input_data(input_data, input_type="file")
     footprint = footprint_function(data)

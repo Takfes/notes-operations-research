@@ -139,7 +139,7 @@ def timeit(func):
 def fake_solver(input_data):
     data = parse_input_data(input_data, input_type="string")
     footprints = load_footprints_from_disk()
-    footprint = calculate_data_footprint(data)
+    footprint = footprint_function(data)
     file_name = footprints[str(footprint)]
     output_data = load_solution_from_disk(file_name)
     return output_data
