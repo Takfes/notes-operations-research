@@ -21,7 +21,6 @@ DATA_DIR = ROOT_DIR / "data"
 """
 
 
-# TODO : Adjust this to problem specific data
 def parse_input_data(input_data, input_type="string"):
     """Parse a problem data from either a file or directly from a string."""
 
@@ -34,35 +33,47 @@ def parse_input_data(input_data, input_type="string"):
         raise ValueError(f"Invalid input_type: {input_type}")
 
     # Parse problem parameters
-    info1, info2 = map(int, lines[0].split())
+    n_customers, n_vehicles, vehicle_capacity = map(int, lines[0].split())
 
     # Parse problem data
-    data_columns = ["colname1", "colname2"]
-    lines = [x for x in lines if x != "\n" and x != " "][1:]
-    assert len(lines) == info1, f"Expected {info1} items, got {len(lines)}"
+    data_columns = ["demand", "x", "y"]
+    tail_lines = [x for x in lines if x != "\n" and x != " "][1:]
+    assert len(tail_lines) == n_customers, (
+        f"Expected {n_customers} items, got {len(tail_lines)}"
+    )
     dataset = pd.DataFrame(
-        [list(map(int, x.split())) for x in lines],
+        [list(map(float, x.split())) for x in tail_lines],
         columns=data_columns,
-        dtype=int,
+        dtype=float,
     )
 
+    assert dataset.isnull().sum().sum() == 0, "Dataset contains NaN values"
+
     return {
-        "info1": info1,
-        "info2": info2,
+        "n_customers": n_customers,
+        "n_vehicles": n_vehicles,
+        "vehicle_capacity": vehicle_capacity,
         "dataset": dataset,
     }
 
 
-# TODO : Adjust this to problem specific data
 def calculate_data_footprint(data):
-    return data["info1"] + data["info2"] + data["dataset"].sum().sum().item()
+    return (
+        data["n_customers"]
+        + data["n_vehicles"]
+        + data["vehicle_capacity"]
+        + data["dataset"].sum().sum().item()
+    )
 
 
-# TODO : Adjust this to problem specific data
 # TODO : Alternative to `calculate_data_footprint`
 def calculate_dataframe_hash(data) -> str:
     # Convert DataFrame to a string representation
-    df_str = str(data["info1"]) + str(data["info1"])
+    df_str = (
+        str(data["n_customers"])
+        + str(data["n_vehicles"])
+        + str(data["vehicle_capacity"])
+    )
     df_str += data["dataset"].to_string()
     # Calculate the hash using SHA-256
     hash_object = hashlib.sha256(df_str.encode())

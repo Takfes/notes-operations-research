@@ -299,7 +299,7 @@ class DSatur:
 
     @timeit
     def solve(self, verbose=False):
-        q = [x for x in self.nodes]
+        q = [x for x in self.nodes]  # noqa: C416
         counter = 1
         while q:
             q.sort(key=lambda x: (x.saturation, x.degree), reverse=True)
