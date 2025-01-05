@@ -16,6 +16,7 @@ from functions import (
     greedy_knapsack_stochastic,
     knapsack,
     knapsack_branch_and_bound,
+    knapsack_mip_pyomo,
     list_files_in_dir,
     load_footprints_from_disk,
     parse_input_data,
@@ -40,7 +41,7 @@ ks_10000_0  Knapsack Problem 6  capacity=1,000,000 | n_items=10000 | 10,000,000,
 
 # * DEFINE CONSTANTS
 # list_files_in_dir(full_path=False)
-file_name = "ks_30_0"
+file_name = "ks_10000_0"
 
 # * LOAD DATA
 input_data = Path(DATA_DIR) / file_name
@@ -55,6 +56,40 @@ footprints = load_footprints_from_disk()
 footprint = calculate_data_footprint(data)
 assert footprints[str(footprint)] == file_name
 print(f"Footprint: {footprints[str(footprint)]} matches {file_name=}")
+
+"""
+# ==============================================================
+# Solve the problem using MIP with Pyomo
+# ==============================================================
+"""
+
+# ! this was implemented after submission
+# ! for some reason the mip one is underperforming for the ks_400_0 and ks_1000_0 vs the greedy knapsack that was applied for the submission
+# ! at the same time, mip is performing better for ks_10000_0
+
+obj_value, solution_dict = knapsack_mip_pyomo(data)
+solution = list(solution_dict.values())
+
+itemsc = items.copy()
+itemsc["selected"] = solution
+total_value = int(itemsc.loc[itemsc.selected == 1, :].value.sum().item())
+total_weight = int(itemsc.loc[itemsc.selected == 1, :].weight.sum().item())
+
+# quick validation
+assert len(solution) == n_items
+min_weight = items.weight.min().item()
+leftover = capacity - total_weight
+print("Capacity:", capacity)
+print("Total weight:", total_weight)
+print("Leftover capacity:", leftover)
+print("Minimum weight:", min_weight)
+print("Total Value:", total_value)
+
+# * WRITE SOLUTION
+output_data = generate_output(total_value, solution, optimized_indicator=1)
+print(f"Solution {file_name}:")
+print(output_data)
+# write_solution(output_data, file_name)
 
 
 """

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyomo.environ as pyo
 from tqdm import tqdm
 
 # Data Paths
@@ -121,6 +122,41 @@ def timeit(func):
 # TODO : BnB sorting by density worth
 # TODO : Genetic Algorithms
 # TODO : implemented heuristics could be enhanced based on Tabu search logic
+
+
+@timeit
+def knapsack_mip_pyomo(data):
+    # initialize model
+    model = pyo.ConcreteModel()
+    # define sets
+    model.I = pyo.Set(initialize=range(data["n_items"]))
+    # define parameters
+    model.V = pyo.Param(model.I, initialize=data["items"].value.to_dict())
+    model.W = pyo.Param(model.I, initialize=data["items"].weight.to_dict())
+    model.C = pyo.Param(initialize=data["capacity"])
+    # define variables
+    model.x = pyo.Var(model.I, within=pyo.Binary)
+
+    # define constraints
+    def weight_constraint_rule(model):
+        return sum(model.W[i] * model.x[i] for i in model.I) <= model.C
+
+    model.capacity_constraint = pyo.Constraint(rule=weight_constraint_rule)
+
+    # define objective
+    def obj(model):
+        return sum(model.V[i] * model.x[i] for i in model.I)
+
+    model.obj = pyo.Objective(rule=obj, sense=pyo.maximize)
+    # solve
+    solver = pyo.SolverFactory("appsi_highs")
+    solver.solve(model)
+    # extract solution
+    solution_dict = {
+        k: np.isclose(v, 1, atol=1e-6).item() * 1
+        for k, v in model.x.extract_values().items()
+    }
+    return model.obj(), solution_dict
 
 
 @timeit
