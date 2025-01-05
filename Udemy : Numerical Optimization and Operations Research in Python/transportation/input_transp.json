@@ -1,0 +1,75 @@
+{
+    "availabilities": {
+        "S1": 14,
+        "S2": 26,
+        "S3": 11
+    },
+    "demands": {
+        "C1": 5,
+        "C2": 13,
+        "C3": 15,
+        "C4": 17
+    },
+    "costs": [
+        {
+            "from": "S1",
+            "to": "C1",
+            "value": 10
+        },
+        {
+            "from": "S1",
+            "to": "C2",
+            "value": 5
+        },
+        {
+            "from": "S1",
+            "to": "C3",
+            "value": 20
+        },
+        {
+            "from": "S1",
+            "to": "C4",
+            "value": 12
+        },
+        {
+            "from": "S2",
+            "to": "C1",
+            "value": 12
+        },
+        {
+            "from": "S2",
+            "to": "C2",
+            "value": 7
+        },
+        {
+            "from": "S2",
+            "to": "C3",
+            "value": 12
+        },
+        {
+            "from": "S2",
+            "to": "C4",
+            "value": 19
+        },
+        {
+            "from": "S3",
+            "to": "C1",
+            "value": 6
+        },
+        {
+            "from": "S3",
+            "to": "C2",
+            "value": 12
+        },
+        {
+            "from": "S3",
+            "to": "C3",
+            "value": 16
+        },
+        {
+            "from": "S3",
+            "to": "C4",
+            "value": 17
+        }
+    ]
+}
