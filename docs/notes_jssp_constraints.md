@@ -143,6 +143,18 @@ $
 
 ---
 
+```python
+def cstr_duration(model, m, j, t):
+    if t <= model.T.last() - model.p[m, j]:
+        lhs = model.p[m, j] * model.y[m, j, t]
+        rhs = sum(model.x[m, j, t2] for t2 in range(t, t + model.p[m, j]))
+        return lhs <= rhs
+    else:
+        return model.y[m, j, t] == 0
+```
+
+---
+
 ### **Summary**
 
 1. **Natural Language**: If a job starts at time $ t $, it must remain active for $ p $ consecutive time steps.
