@@ -1,7 +1,8 @@
 
 # Infeasibilities
 
-- two different ways to tackle infeasibilities are discussed, `penalty terms` vs `hierarchical objectives`
+- two different ways to tackle infeasibilities are discussed below, `penalty terms` vs `hierarchical objectives`
+- further reading [Pyomo Infeasibility Diagnostics](https://pyomo.readthedocs.io/en/6.8.0/contributed_packages/iis.html) and [Pyomo Repeated Solves](https://pyomo.readthedocs.io/en/stable/howto/manipulating.html)
 
 ## Penalty Terms
 
